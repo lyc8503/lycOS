@@ -1,20 +1,21 @@
-; ˆê±—p???Œ¾Š®¬“I”Ÿ”
+; ä¸€äº›ç”¨æ±‡ç¼–è¯­è¨€å®Œæˆçš„å‡½æ•°
 
-[FORMAT "WCOFF"]                ; §ì–Ú?•¶Œ–ÍŽ®
-[BITS 32]                       ; §ì 32 ˆÊŠ÷Ší?Œ¾
-
-
-; §ì–Ú?•¶ŒM‘§
-
-[FILE "naskfunc.nas"]           ; Œ¹•¶Œ–¼M‘§
-
-        GLOBAL	_io_hlt         ; ’ö˜’†•ïŠÜ“I”Ÿ”–¼
+[FORMAT "WCOFF"]                ; åˆ¶ä½œç›®æ ‡æ–‡ä»¶æ¨¡å¼
+[BITS 32]                       ; åˆ¶ä½œ 32 ä½æœºå™¨è¯­è¨€
+[INSTRSET "i486p"]              ; æŒ‡å®š 486 åŠä»¥åŽçš„ CPU
 
 
-; ˆÈ‰º¥??“I”Ÿ”
+; åˆ¶ä½œç›®æ ‡æ–‡ä»¶ä¿¡æ¯
 
-[SECTION .text]		; ŽÊ—¹ã–Ê?±”V@Ä?ŽnŽÊ’ö˜
+[FILE "naskfunc.nas"]           ; æºæ–‡ä»¶åä¿¡æ¯
 
-_io_hlt:            ; ‘¦ C ’†“I void io_hlt(void);
+        GLOBAL	_io_hlt         ; ç¨‹åºä¸­åŒ…å«çš„å‡½æ•°å
+
+
+; ä»¥ä¸‹æ˜¯çœŸæ­£çš„å‡½æ•°
+
+[SECTION .text]		; å†™äº†ä¸Šé¢é‚£äº›ä¹‹åŽå†å¼€å§‹å†™ç¨‹åº
+
+_io_hlt:            ; å³ C ä¸­çš„ void io_hlt(void);
         HLT
-        RET         ; •Ô‰ñ, ‘¦ return;
+        RET         ; è¿”å›ž, å³ return;
