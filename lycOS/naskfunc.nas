@@ -1,21 +1,20 @@
-; naskfunc
-; TAB=4
+; 一些用???言完成的函数
 
-[FORMAT "WCOFF"]				; オブジェクトファイルを作るモード	
-[BITS 32]						; 32ビットモード用の機械語を作らせる
-
-
-; オブジェクトファイルのための情報
-
-[FILE "naskfunc.nas"]			; ソースファイル名情報
-
-		GLOBAL	_io_hlt			; このプログラムに含まれる関数名
+[FORMAT "WCOFF"]                ; 制作目?文件模式
+[BITS 32]                       ; 制作 32 位机器?言
 
 
-; 以下は実際の関数
+; 制作目?文件信息
 
-[SECTION .text]		; オブジェクトファイルではこれを書いてからプログラムを書く
+[FILE "naskfunc.nas"]           ; 源文件名信息
 
-_io_hlt:	; void io_hlt(void);
-		HLT
-		RET
+        GLOBAL	_io_hlt         ; 程序中包含的函数名
+
+
+; 以下是??的函数
+
+[SECTION .text]		; 写了上面?些之后再?始写程序
+
+_io_hlt:            ; 即 C 中的 void io_hlt(void);
+        HLT
+        RET         ; 返回, 即 return;

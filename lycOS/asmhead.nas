@@ -1,34 +1,35 @@
-;TODO 这段还没研究 暂时抄过来
+;TODO 这段还没研究完 暂时抄过来
 
 BOTPAK	EQU		0x00280000		; bootpackのロード先
 DSKCAC	EQU		0x00100000		; ディスクキャッシュの場所
 DSKCAC0	EQU		0x00008000		; ディスクキャッシュの場所（リアルモード）
 
-; BOOT_INFO関係
-CYLS	EQU		0x0ff0			; ブートセクタが設定する
+; BOOT_INFO相关
+CYLS	EQU		0x0ff0			; 设定启动区
 LEDS	EQU		0x0ff1
-VMODE	EQU		0x0ff2			; 色数に関する情報。何ビットカラーか？
-SCRNX	EQU		0x0ff4			; 解像度のX
-SCRNY	EQU		0x0ff6			; 解像度のY
-VRAM	EQU		0x0ff8			; グラフィックバッファの開始番地
+VMODE	EQU		0x0ff2			; 颜色位数
+SCRNX	EQU		0x0ff4			; 分辨率 X
+SCRNY	EQU		0x0ff6			; 分辨率 Y
+VRAM	EQU		0x0ff8			; 图像缓冲区开始的内存地址
 
-		ORG		0xc200			; このプログラムがどこに読み込まれるのか
+		ORG		0xc200			; 程序载入的内存起点
 
-; 画面モードを設定
+; 画面设置
 
-		MOV		AL,0x13			; VGAグラフィックス、320x200x8bitカラー
+		MOV		AL,0x13			; VGA, 320x200x8bit 色彩
 		MOV		AH,0x00
 		INT		0x10
-		MOV		BYTE [VMODE],8	; 画面モードをメモする（C言語が参照する）
+		MOV		BYTE [VMODE],8	; 记录画面模式
 		MOV		WORD [SCRNX],320
 		MOV		WORD [SCRNY],200
 		MOV		DWORD [VRAM],0x000a0000
 
-; キーボードのLED状態をBIOSに教えてもらう
+; BIOS 获取键盘指示灯状态
 
 		MOV		AH,0x02
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
+
 
 ; PICが一切の割り込みを受け付けないようにする
 ;	AT互換機の仕様では、PICの初期化をするなら、
