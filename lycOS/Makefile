@@ -13,6 +13,8 @@ GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
 BIM2HRB  = $(TOOLPATH)bim2hrb.exe
 RULEFILE = $(TOOLPATH)haribote/haribote.rul
+MAKEFONT = $(TOOLPATH)makefont.exe
+BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 
 
 default:
@@ -42,10 +44,17 @@ bootpack.obj : bootpack.nas Makefile
 naskfunc.obj : naskfunc.nas Makefile
 	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
 
+# ascii 字体处理
+ascii_font.bin : ascii_font.txt Makefile
+	$(MAKEFONT) ascii_font.txt ascii_font.bin
+
+ascii_font.obj : ascii_font.bin Makefile
+	$(BIN2OBJ) ascii_font.bin ascii_font.obj _ascfont
+
 # 链接目标文件 生成二进制镜像
-bootpack.bim : bootpack.obj naskfunc.obj Makefile
+bootpack.bim : bootpack.obj naskfunc.obj ascii_font.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj
+		bootpack.obj naskfunc.obj ascii_font.obj
 # 3MB+64KB=3136KB
 
 # 处理格式 TODO:暂不明确 hrb 文件格式

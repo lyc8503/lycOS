@@ -24,6 +24,8 @@ struct BOOTINFO{
 #define COLOR8_LIGHT_DARK_BLUE 14
 #define COLOR8_DARK_GREY 15
 
+extern char ascfont[4096];
+
 void io_hlt();
 void io_cli();
 void io_out8(int port, int data);
@@ -79,6 +81,34 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
             vram[y * xsize + x] = c;
         }
     }
+    return;
+}
+
+void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font){
+    int i;
+    char *p, d;
+
+    // 每次可以写入一字节 = 8 bit = 8 像素
+    for (i = 0; i < 16; i ++){
+        p = vram + (y + i) * xsize + x;
+        d = font[i];
+        if ((d & 0x80) != 0) { p[0] = c; }
+        if ((d & 0x40) != 0) { p[1] = c; }
+        if ((d & 0x20) != 0) { p[2] = c; }
+        if ((d & 0x10) != 0) { p[3] = c; }
+        if ((d & 0x08) != 0) { p[4] = c; }
+        if ((d & 0x04) != 0) { p[5] = c; }
+        if ((d & 0x02) != 0) { p[6] = c; }
+        if ((d & 0x01) != 0) { p[7] = c; }
+    }
+    return;
+}
+
+void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, char c, unsigned char *str){
+    for (; *str != 0x00; str ++) {
+        put_ascii_font8(vram, xsize, x, y, c, ascfont + *str * 16);
+        x += 8;
+    }
 }
 
 
@@ -94,6 +124,10 @@ void MyOSMain(){
 
     // 填充桌面背景色
     boxfill8(binfo->vram, binfo->scrnx, COLOR8_LIGHT_DARK_BLUE, 0, 0, binfo->scrnx, binfo->scrny);
+
+    // 图片显示 HelloWorld!
+
+    put_ascii_str8(binfo->vram, binfo->scrnx, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
     while(1){
         io_hlt();
