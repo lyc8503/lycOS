@@ -1,8 +1,7 @@
 #include "graphic.h"
+#include "bootpack.h"
 
-
-
-void set_palette(int start, int end, unsigned char *rgb){
+void set_palette(int start, int end, unsigned char *rgb) {
     int i, eflags;
     eflags = io_get_eflags(); // 保存当前中断状态
     io_cli(); // 禁止中断
@@ -19,7 +18,7 @@ void set_palette(int start, int end, unsigned char *rgb){
     return;
 }
 
-void init_palette(){
+void init_palette() {
     static unsigned char table_rgb[16 * 3] = {
             0x00, 0x00, 0x00,   // 黑色
             0xff, 0x00, 0x00,   // 亮红
@@ -43,7 +42,7 @@ void init_palette(){
     return;
 }
 
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){
+void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
     int x, y;
     for (y = y0; y <= y1; y ++) {
         for (x = x0; x <= x1; x ++) {
@@ -53,12 +52,12 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
     return;
 }
 
-void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font){
+void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
     int i;
     char *p, d;
 
     // 每次可以写入一字节 = 8 bit = 8 像素
-    for (i = 0; i < 16; i ++){
+    for (i = 0; i < 16; i ++) {
         p = vram + (y + i) * xsize + x;
         d = font[i];
         if ((d & 0x80) != 0) { p[0] = c; }
@@ -73,7 +72,7 @@ void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char 
     return;
 }
 
-void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, char c, unsigned char *str){
+void put_ascii_str8(char *vram, int xsize, int x, int y, char c, char *str) {
     for (; *str != 0x00; str ++) {
         put_ascii_font8(vram, xsize, x, y, c, ascfont + *str * 16);
         x += 8;

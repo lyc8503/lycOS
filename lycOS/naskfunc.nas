@@ -13,6 +13,7 @@
         GLOBAL  _io_in8,  _io_in16,  _io_in32
         GLOBAL  _io_out8, _io_out16, _io_out32
         GLOBAL  _io_get_eflags, _io_set_eflags
+        GLOBAL	_load_gdtr, _load_idtr
 
 
 ; 以下是真正的函数
@@ -71,13 +72,25 @@ _io_out32:                              ; void io_out32(int port, int data);
         OUT         DX,EAX
         RET
 
-_io_get_eflags:                        ; int io_load_eflags(void);
+_io_get_eflags:                         ; int io_load_eflags(void);
         PUSHFD                          ; PUSH EFLAGS
         POP         EAX
         RET
 
-_io_set_eflags:                       ; void io_store_eflags(int eflags);
+_io_set_eflags:                         ; void io_store_eflags(int eflags);
         MOV         EAX,[ESP+4]
         PUSH        EAX
         POPFD                           ; POP EFLAGS
         RET
+
+_load_gdtr:		                        ; void load_gdtr(int limit, int addr);
+		MOV		AX,[ESP+4]		        ; limit
+		MOV		[ESP+6],AX
+		LGDT	[ESP+6]
+		RET
+
+_load_idtr:		                        ; void load_idtr(int limit, int addr);
+		MOV		AX,[ESP+4]		        ; limit
+		MOV		[ESP+6],AX
+		LIDT	[ESP+6]
+		RET
