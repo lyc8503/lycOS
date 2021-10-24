@@ -1,3 +1,5 @@
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj
+
 # 路径
 TOOLPATH = ../tools/z_tools/
 INCPATH  = ../tools/z_tools/haribote/
@@ -29,20 +31,16 @@ asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
 # 将 C 语言代码编译成 gas 汇编源码
-bootpack.gas : bootpack.c Makefile
-	$(CC1) -o bootpack.gas bootpack.c
+%.gas : %.c Makefile
+	$(CC1) -o $*.gas $*.c
 
 # 从 gas 汇编转换为 nask 文件
-bootpack.nas : bootpack.gas Makefile
-	$(GAS2NASK) bootpack.gas bootpack.nas
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
 
-# 编译生成目标文件
-bootpack.obj : bootpack.nas Makefile
-	$(NASK) bootpack.nas bootpack.obj bootpack.lst
-
-# 编译汇编函数
-naskfunc.obj : naskfunc.nas Makefile
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+# 编译生成目标文件(包括 C 和 nasfunc.nas)
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
 
 # ascii 字体处理
 ascii_font.bin : ascii_font.txt Makefile
@@ -52,9 +50,9 @@ ascii_font.obj : ascii_font.bin Makefile
 	$(BIN2OBJ) ascii_font.bin ascii_font.obj _ascfont
 
 # 链接目标文件 生成二进制镜像
-bootpack.bim : bootpack.obj naskfunc.obj ascii_font.obj Makefile
+bootpack.bim : $(OBJS_BOOTPACK) Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj ascii_font.obj
+		$(OBJS_BOOTPACK)
 # 3MB+64KB=3136KB
 
 # 处理格式 TODO:暂不明确 hrb 文件格式
