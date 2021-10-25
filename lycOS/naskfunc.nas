@@ -13,8 +13,9 @@
         GLOBAL  _io_in8,  _io_in16,  _io_in32
         GLOBAL  _io_out8, _io_out16, _io_out32
         GLOBAL  _io_get_eflags, _io_set_eflags
-        GLOBAL	_load_gdtr, _load_idtr
-
+        GLOBAL    _load_gdtr, _load_idtr
+        GLOBAL    _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
+        EXTERN    _int_handler21, _int_handler27, _int_handler2c  ; C 中的外部函数
 
 ; 以下是真正的函数
 
@@ -83,14 +84,62 @@ _io_set_eflags:                         ; void io_store_eflags(int eflags);
         POPFD                           ; POP EFLAGS
         RET
 
-_load_gdtr:		                        ; void load_gdtr(int limit, int addr);
-		MOV		AX,[ESP+4]		        ; limit
-		MOV		[ESP+6],AX
-		LGDT	[ESP+6]
-		RET
+_load_gdtr:                             ; void load_gdtr(int limit, int addr);
+        MOV         AX,[ESP+4]          ; limit
+        MOV         [ESP+6],AX
+        LGDT        [ESP+6]
+        RET
 
-_load_idtr:		                        ; void load_idtr(int limit, int addr);
-		MOV		AX,[ESP+4]		        ; limit
-		MOV		[ESP+6],AX
-		LIDT	[ESP+6]
-		RET
+_load_idtr:                             ; void load_idtr(int limit, int addr);
+        MOV         AX,[ESP+4]          ; limit
+        MOV         [ESP+6],AX
+        LIDT        [ESP+6]
+        RET
+
+_asm_inthandler21:                      ; 处理中断
+        PUSH        ES
+        PUSH        DS
+        PUSHAD
+        MOV         EAX,ESP
+        PUSH        EAX
+        MOV         AX,SS
+        MOV         DS,AX
+        MOV         ES,AX
+        CALL        _int_handler21
+        POP         EAX
+        POPAD
+        POP         DS
+        POP         ES
+        IRETD
+
+_asm_inthandler27:
+        PUSH        ES
+        PUSH        DS
+        PUSHAD
+        MOV         EAX,ESP
+        PUSH        EAX
+        MOV         AX,SS
+        MOV         DS,AX
+        MOV         ES,AX
+        CALL        _int_handler27
+        POP         EAX
+        POPAD
+        POP         DS
+        POP         ES
+        IRETD
+
+_asm_inthandler2c:
+        PUSH        ES
+        PUSH        DS
+        PUSHAD
+        MOV         EAX,ESP
+        PUSH        EAX
+        MOV         AX,SS
+        MOV         DS,AX
+        MOV         ES,AX
+        CALL        _int_handler2c
+        POP         EAX
+        POPAD
+        POP         DS
+        POP         ES
+        IRETD

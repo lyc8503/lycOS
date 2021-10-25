@@ -1,0 +1,11 @@
+.idea
+*.obj
+*.lst
+*.gas
+*.bin
+bootpack.nas
+bootpack.map
+bootpack.bim
+bootpack.hrb
+lycos.sys
+lycos.img

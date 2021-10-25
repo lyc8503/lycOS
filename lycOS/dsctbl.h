@@ -11,8 +11,15 @@ struct GATE_DESCRIPTOR {
     short offset_high;
 };
 
-#define GATE_DESCRIPTOR_ADDR 0x0026f800
-#define SEGMENT_DESCRIPTOR_ADDR 0x00270000
+#define IDT_ADDR 0x0026f800
+#define GDT_ADDR 0x00270000
+#define LIMIT_IDT 0x000007ff
+#define LIMIT_GDT 0x0000ffff
+#define BOOTPACK_ADDR 0x00280000
+#define LIMIT_BOOTPACK 0x0007ffff
+#define AR_DATA32_RW 0x4092
+#define AR_CODE32_ER 0x409a
+#define AR_INTGATE32 0x008e
 
 void init_gdtidt();
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);

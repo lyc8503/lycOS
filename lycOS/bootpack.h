@@ -24,3 +24,7 @@ void io_set_eflags(int eflags);
 
 void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
+
+void asm_inthandler21();
+void asm_inthandler27();
+void asm_inthandler2c();
