@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj
 
 # 路径
 TOOLPATH = ../tools/z_tools/
