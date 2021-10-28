@@ -1,6 +1,5 @@
 #include "int.h"
 #include "bootpack.h"
-#include "graphic.h"
 
 // 初始化 pic
 void init_pic() {
@@ -30,21 +29,3 @@ void int_handler27(int *esp) {
     io_out8(PIC0_OCW2, 0x67);
     return;
 }
-
-// IRQ1 = 键盘
-void int_handler21(int *esp) {
-    struct BOOTINFO *binfo = (struct BOOTINFO *) BOOTINFO_ADDR;
-    boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, 0, 32 * 8 - 1, 15);
-    put_ascii_str8(binfo->vram, binfo->scrnx, 0, 0, COLOR8_WHITE, "INT21 (IRQ1): PS/2 Keyboard");
-    while(1) {
-        io_hlt();
-    }
-
-}
-
-
-// IRQ12 = 鼠标
-void int_handler2c(int *esp) {
-
-}
-

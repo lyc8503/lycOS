@@ -1,6 +1,5 @@
 #include "buffer.h"
 
-
 void fifo8_init(struct FIFO8_BUF *fifo8, int size, unsigned char* buf) {
     fifo8->buf = buf;
     fifo8->flags = 0;
@@ -50,4 +49,6 @@ int fifo8_get(struct FIFO8_BUF *fifo8) {
     return data;
 }
 
-
+int fifo8_data_available(struct FIFO8_BUF *fifo8) {
+    return fifo8->size - fifo8->free;
+}
