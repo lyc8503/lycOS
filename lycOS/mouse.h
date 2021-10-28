@@ -1,8 +1,8 @@
-//
-// Created by 15533 on 2021/10/26.
-//
+#define KEYCMD_SENDTO_MOUSE 0xd4
+#define MOUSECMD_ENABLE 0xf4
 
-#ifndef BUFFER_C_MOUSE_H
-#define BUFFER_C_MOUSE_H
+extern struct FIFO8_BUF mouse_buf;
 
-#endif //BUFFER_C_MOUSE_H
+void int_handler2c(int *esp);
+void enable_mouse();
+

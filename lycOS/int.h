@@ -10,7 +10,6 @@
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
+
 void init_pic();
 void int_handler27(int *esp);
-void int_handler21(int *esp);
-void int_handler2c(int *esp);

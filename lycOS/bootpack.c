@@ -1,9 +1,12 @@
-// 启动时保存的一些信息
-#include<stdio.h>
+#include <stdio.h>
 #include "bootpack.h"
 #include "graphic.h"
 #include "dsctbl.h"
 #include "int.h"
+#include "keyboard.h"
+#include "mouse.h"
+#include "buffer.h"
+
 
 // 系统入口
 void MyOSMain() {
@@ -27,11 +30,44 @@ void MyOSMain() {
     // 填充桌面背景色
     boxfill8(binfo->vram, binfo->scrnx, COLOR8_LIGHT_DARK_BLUE, 0, 0, binfo->scrnx, binfo->scrny);
 
-    // 图片显示 HelloWorld!
+    // 显示 HelloWorld!
     put_ascii_str8(binfo->vram, binfo->scrnx, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
+
+    // 键盘分配 128 byte 缓冲区
+    unsigned char key_data[128];
+    fifo8_init(&key_buf, 128, key_data);
+    // 鼠标分配 512 byte 缓冲区
+    unsigned char mouse_data[512];
+    fifo8_init(&mouse_buf, 512, mouse_data);
+
+    init_keyboard();
+    enable_mouse();
 
 
     while(1){
-        io_hlt();
+        io_cli();  // 处理过程中禁止中断
+
+        if (fifo8_data_available(&key_buf) + fifo8_data_available(&mouse_buf) == 0) {
+            io_stihlt();  // 接收中断并等待
+        } else {
+            int data = fifo8_get(&key_buf);
+            if(data != RET_EMPTY) {
+                boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
+                char output[1024];
+
+                sprintf(output, "KEYBOARD: %02X", data);
+                put_ascii_str8(binfo->vram, binfo->scrnx, 8, binfo->scrny - 16, COLOR8_WHITE, output);
+            }
+
+            data = fifo8_get(&mouse_buf);
+            if(data != RET_EMPTY) {
+                boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
+                char output[1024];
+
+                sprintf(output, "MOUSE: %02X", data);
+                put_ascii_str8(binfo->vram, binfo->scrnx, 8, binfo->scrny - 16, COLOR8_WHITE, output);
+            }
+        }
     }
 }
+
