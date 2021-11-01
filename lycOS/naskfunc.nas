@@ -9,13 +9,15 @@
 
 [FILE "naskfunc.nas"]           ; 源文件名信息
 ; 程序中包含的函数名
-        GLOBAL  _io_hlt, _io_cli, _io_sti, _io_stihlt
-        GLOBAL  _io_in8,  _io_in16,  _io_in32
-        GLOBAL  _io_out8, _io_out16, _io_out32
-        GLOBAL  _io_get_eflags, _io_set_eflags
-        GLOBAL    _load_gdtr, _load_idtr
-        GLOBAL    _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-        EXTERN    _int_handler21, _int_handler27, _int_handler2c  ; C 中的外部函数
+        GLOBAL      _io_hlt, _io_cli, _io_sti, _io_stihlt
+        GLOBAL      _io_in8,  _io_in16,  _io_in32
+        GLOBAL      _io_out8, _io_out16, _io_out32
+        GLOBAL      _io_get_eflags, _io_set_eflags
+        GLOBAL      _load_gdtr, _load_idtr
+        GLOBAL      _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
+        GLOBAL        _get_cr0, _set_cr0
+        GLOBAL      _memtest_sub
+        EXTERN      _int_handler21, _int_handler27, _int_handler2c  ; C 中的外部函数
 
 ; 以下是真正的函数
 
@@ -73,12 +75,12 @@ _io_out32:                              ; void io_out32(int port, int data);
         OUT         DX,EAX
         RET
 
-_io_get_eflags:                         ; int io_load_eflags(void);
+_io_get_eflags:                         ; int io_get_eflags(void);
         PUSHFD                          ; PUSH EFLAGS
         POP         EAX
         RET
 
-_io_set_eflags:                         ; void io_store_eflags(int eflags);
+_io_set_eflags:                         ; void io_set_eflags(int eflags);
         MOV         EAX,[ESP+4]
         PUSH        EAX
         POPFD                           ; POP EFLAGS
@@ -94,6 +96,15 @@ _load_idtr:                             ; void load_idtr(int limit, int addr);
         MOV         AX,[ESP+4]          ; limit
         MOV         [ESP+6],AX
         LIDT        [ESP+6]
+        RET
+
+_get_cr0:                               ; int get_cr0(void);
+        MOV         EAX,CR0
+        RET
+
+_set_cr0:                               ; void set_cr0(int cr0);
+        MOV         EAX,[ESP+4]
+        MOV         CR0,EAX
         RET
 
 _asm_inthandler21:                      ; 处理中断
@@ -143,3 +154,36 @@ _asm_inthandler2c:
         POP         DS
         POP         ES
         IRETD
+
+_memtest_sub:       ; unsigned int memtest_sub(unsigned int start, unsigned int end);
+        PUSH        EDI                         ; 暂存 EBX, ESI, EDI
+        PUSH        ESI
+        PUSH        EBX
+        MOV         ESI,0xaa55aa55              ; pat0 = 0xaa55aa55;
+        MOV         EDI,0x55aa55aa              ; pat1 = 0x55aa55aa;
+        MOV         EAX,[ESP+12+4]              ; i = start;
+mts_loop:
+        MOV         EBX,EAX
+        ADD         EBX,0xffc                   ; p = i + 0xffc;
+        MOV         EDX,[EBX]                   ; old = *p;
+        MOV         [EBX],ESI                   ; *p = pat0;
+        XOR         DWORD [EBX],0xffffffff      ; *p ^= 0xffffffff;
+        CMP         EDI,[EBX]                   ; if (*p != pat1) goto fin;
+        JNE         mts_fin
+        XOR         DWORD [EBX],0xffffffff      ; *p ^= 0xffffffff;
+        CMP         ESI,[EBX]                   ; if (*p != pat0) goto fin;
+        JNE         mts_fin
+        MOV         [EBX],EDX                   ; *p = old;
+        ADD         EAX,0x1000                  ; i += 0x1000;
+        CMP         EAX,[ESP+12+8]              ; if (i <= end) goto mts_loop;
+        JBE         mts_loop
+        POP         EBX
+        POP         ESI
+        POP         EDI
+        RET
+mts_fin:
+        MOV         [EBX],EDX                   ; *p = old;
+        POP         EBX
+        POP         ESI
+        POP         EDI
+        RET

@@ -28,3 +28,8 @@ void load_idtr(int limit, int addr);
 void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
+
+int get_cr0(void);
+void set_cr0(int cr0);
+
+unsigned int memtest_sub(unsigned int start, unsigned int end);
