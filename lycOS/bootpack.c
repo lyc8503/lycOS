@@ -41,7 +41,7 @@ void MyOSMain() {
     fifo8_init(&mouse_buf, 512, mouse_data);
 
     init_keyboard();
-    enable_mouse();
+    enable_mouse(&mouse_dec);
 
 
     while(1){
@@ -61,11 +61,13 @@ void MyOSMain() {
 
             data = fifo8_get(&mouse_buf);
             if(data != RET_EMPTY) {
-                boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
-                char output[1024];
+                if(mouse_decode(&mouse_dec, data) != 0) {
+                    boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
+                    char output[1024];
 
-                sprintf(output, "MOUSE: %02X", data);
-                put_ascii_str8(binfo->vram, binfo->scrnx, 8, binfo->scrny - 16, COLOR8_WHITE, output);
+                    sprintf(output, "MOUSE: %d %d %d %d %d", mouse_dec.button & 0x01, (mouse_dec.button & 0x04) / 4, (mouse_dec.button & 0x02) / 2, mouse_dec.x, mouse_dec.y);
+                    put_ascii_str8(binfo->vram, binfo->scrnx, 8, binfo->scrny - 16, COLOR8_WHITE, output);
+                }
             }
         }
     }
