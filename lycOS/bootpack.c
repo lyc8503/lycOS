@@ -8,9 +8,11 @@
 #include "buffer.h"
 
 
+unsigned char key_data[128];
+unsigned char mouse_data[512];
+
 // 系统入口
 void MyOSMain() {
-
     // 读取启动信息
     struct BOOTINFO *binfo = (struct BOOTINFO *) BOOTINFO_ADDR;
 
@@ -33,11 +35,14 @@ void MyOSMain() {
     // 显示 HelloWorld!
     put_ascii_str8(binfo->vram, binfo->scrnx, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
+    unsigned int memory_total = memtest_sub(0x00400000, 0xbfffffff);  // 最多读取到 3072 MB 内存
+    char mem_out_str[200];
+    sprintf(mem_out_str, "Total memory: %d MB", memory_total  / (1024 * 1024));
+    put_ascii_str8(binfo->vram, binfo->scrnx, 8, 24, COLOR8_WHITE, mem_out_str);
+
     // 键盘分配 128 byte 缓冲区
-    unsigned char key_data[128];
     fifo8_init(&key_buf, 128, key_data);
     // 鼠标分配 512 byte 缓冲区
-    unsigned char mouse_data[512];
     fifo8_init(&mouse_buf, 512, mouse_data);
 
     init_keyboard();
