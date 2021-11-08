@@ -1,7 +1,7 @@
 #define BUFFER_OVERFLOW_FLAG 0x00000001
-#define RET_OK 0
-#define RET_OVERFLOW -1
-#define RET_EMPTY -2
+#define BUFFER_RET_OK 0
+#define BUFFER_RET_OVERFLOW -1
+#define BUFFER_RET_EMPTY -2
 
 struct FIFO8_BUF {
     unsigned char *buf;

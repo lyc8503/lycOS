@@ -17,7 +17,6 @@ void int_handler2c(int *esp) {
 
     data = io_in8(PORT_KEYDAT);
     fifo8_put(&mouse_buf, data);
-    return;
 }
 
 // 启用鼠标  鼠标控制电路包含在键盘控制电路中
@@ -27,7 +26,7 @@ void enable_mouse(struct MOUSE_DECODE *m_dec) {
     wait_KBC_sendready();
     io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);  // 启动鼠标
     m_dec->phase = 0;
-    return;  // 应答信息应该是通过中断发送的 ACK(0xfa)
+    // 应答信息应该是通过中断发送的 ACK(0xfa)
 }
 
 int mouse_decode(struct MOUSE_DECODE *m_dec, unsigned char data) {

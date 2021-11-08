@@ -15,7 +15,7 @@ int fifo8_put(struct FIFO8_BUF *fifo8, unsigned char data) {
     // 没有空间
     if(fifo8->free == 0) {
         fifo8->flags |= BUFFER_OVERFLOW_FLAG;
-        return RET_OVERFLOW;
+        return BUFFER_RET_OVERFLOW;
     }
 
     // 回到开始写入
@@ -28,14 +28,14 @@ int fifo8_put(struct FIFO8_BUF *fifo8, unsigned char data) {
 
     // 成功返回
     fifo8->free--;
-    return RET_OK;
+    return BUFFER_RET_OK;
 }
 
 // 循环链表读取
 int fifo8_get(struct FIFO8_BUF *fifo8) {
 
     if(fifo8->free == fifo8->size) {
-        return RET_EMPTY;
+        return BUFFER_RET_EMPTY;
     }
 
     // 下次读取从头开始
@@ -44,7 +44,7 @@ int fifo8_get(struct FIFO8_BUF *fifo8) {
     }
 
     int data = fifo8->buf[fifo8->next_read++];
-    fifo8->free ++;
+    fifo8->free++;
 
     return data;
 }

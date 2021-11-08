@@ -8,7 +8,7 @@ void init_gdtidt() {
 
     // 初始化 gdt
     int i;
-    for(i = 0; i <= LIMIT_GDT / 8; i ++) {
+    for(i = 0; i <= LIMIT_GDT / 8; i++) {
         set_segmdesc(gdt + i, 0, 0, 0);
     }
 
@@ -18,7 +18,7 @@ void init_gdtidt() {
     load_gdtr(LIMIT_GDT, GDT_ADDR);
 
     // 初始化 idt
-    for(i = 0; i <= LIMIT_IDT / 8; i ++) {
+    for(i = 0; i <= LIMIT_IDT / 8; i++) {
         set_gatedesc(idt + i, 0, 0, 0);
     }
 
@@ -27,8 +27,6 @@ void init_gdtidt() {
     set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);
 
     load_idtr(LIMIT_IDT, IDT_ADDR);
-
-    return;
 }
 
 
@@ -44,8 +42,6 @@ void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, i
     sd->access_permission = ar & 0xff;  // 访问权限
     sd->limit_high = ((limit >> 16) & 0x0f) | ((ar >> 8) & 0xf0);  // 段上限的高位和拓展访问权限
     sd->base_high = (base >> 24) & 0xff;
-
-    return;
 }
 
 
@@ -55,6 +51,4 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned int offset, int selector,
     gd->dw_count = (ar >> 8) & 0xff;
     gd->access_permission = ar & 0xff;
     gd->offset_high = (offset >> 16) & 0xffff;
-
-    return;
 }
