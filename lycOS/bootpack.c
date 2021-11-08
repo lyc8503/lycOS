@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "buffer.h"
+#include "memory.h"
 
 
 unsigned char key_data[128];
@@ -35,10 +36,18 @@ void MyOSMain() {
     // 显示 HelloWorld!
     put_ascii_str8(binfo->vram, binfo->scrnx, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
+    // 检查内存并初始化内存管理
     unsigned int memory_total = memtest_sub(0x00400000, 0xbfffffff);  // 最多读取到 3072 MB 内存
+    struct MEM_MANAGER *memman = (struct MEM_MANAGER*) MEMMAN_ADDR;
+    memman_init(memman);
+    memman_free(memman, 0x00400000, memory_total - 0x00400000);
+
+    memman_alloc(memman, 12 * 1024 * 1024 + 23333);
+
     char mem_out_str[200];
-    sprintf(mem_out_str, "Total memory: %d MB", memory_total  / (1024 * 1024));
+    sprintf(mem_out_str, "Total memory: %d MB  Free: %d MB", memory_total / (1024 * 1024), memman_available(memman) / (1024 * 1024));
     put_ascii_str8(binfo->vram, binfo->scrnx, 8, 24, COLOR8_WHITE, mem_out_str);
+
 
     // 键盘分配 128 byte 缓冲区
     fifo8_init(&key_buf, 128, key_data);
@@ -56,7 +65,7 @@ void MyOSMain() {
             io_stihlt();  // 接收中断并等待
         } else {
             int data = fifo8_get(&key_buf);
-            if(data != RET_EMPTY) {
+            if(data != BUFFER_RET_EMPTY) {
                 boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
                 char output[1024];
 
@@ -65,7 +74,7 @@ void MyOSMain() {
             }
 
             data = fifo8_get(&mouse_buf);
-            if(data != RET_EMPTY) {
+            if(data != BUFFER_RET_EMPTY) {
                 if(mouse_decode(&mouse_dec, data) != 0) {
                     boxfill8(binfo->vram, binfo->scrnx, COLOR8_BLACK, 0, binfo->scrny - 16, binfo->scrnx, binfo->scrny);
                     char output[1024];

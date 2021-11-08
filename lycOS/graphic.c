@@ -8,14 +8,13 @@ void set_palette(int start, int end, unsigned char *rgb) {
 
     // https://stackoverflow.com/questions/42814777/asm-what-does-port-3c8h-3c9h-do
     io_out8(0x03c8, start);
-    for (i = start; i <= end; i ++) {
+    for (i = start; i <= end; i++) {
         io_out8(0x03c9, rgb[0] / 4);
         io_out8(0x03c9, rgb[1] / 4);
         io_out8(0x03c9, rgb[2] / 4);
         rgb += 3;
     }
     io_set_eflags(eflags); // 恢复中断状态
-    return;
 }
 
 void init_palette() {
@@ -39,17 +38,15 @@ void init_palette() {
     };
 
     set_palette(0, 15, table_rgb);
-    return;
 }
 
 void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
     int x, y;
-    for (y = y0; y <= y1; y ++) {
-        for (x = x0; x <= x1; x ++) {
+    for (y = y0; y <= y1; y++) {
+        for (x = x0; x <= x1; x++) {
             vram[y * xsize + x] = c;
         }
     }
-    return;
 }
 
 void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
@@ -57,7 +54,7 @@ void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
     char *p, d;
 
     // 每次可以写入一字节 = 8 bit = 8 像素
-    for (i = 0; i < 16; i ++) {
+    for (i = 0; i < 16; i++) {
         p = vram + (y + i) * xsize + x;
         d = font[i];
         if ((d & 0x80) != 0) { p[0] = c; }
@@ -69,11 +66,10 @@ void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
         if ((d & 0x02) != 0) { p[6] = c; }
         if ((d & 0x01) != 0) { p[7] = c; }
     }
-    return;
 }
 
 void put_ascii_str8(char *vram, int xsize, int x, int y, char c, char *str) {
-    for (; *str != 0x00; str ++) {
+    for (; *str != 0x00; str++) {
         put_ascii_font8(vram, xsize, x, y, c, ascfont + *str * 16);
         x += 8;
     }

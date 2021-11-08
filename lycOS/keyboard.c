@@ -12,8 +12,6 @@ void int_handler21(int *esp) {
 
     data = io_in8(PORT_KEYDAT);  // 读取数据
     fifo8_put(&key_buf, data);
-
-    return;
 }
 
 // 等待键盘控制电路准备完成
@@ -23,7 +21,6 @@ void wait_KBC_sendready() {
             break;
         }
     }
-    return;
 }
 
 // 初始化键盘(及鼠标)控制电路
@@ -32,5 +29,4 @@ void init_keyboard() {
     io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
     wait_KBC_sendready();
     io_out8(PORT_KEYDAT, KBC_MODE);
-    return;
 }

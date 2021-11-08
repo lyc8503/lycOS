@@ -20,12 +20,9 @@ void init_pic() {
 
     io_out8(PIC0_IMR, 0xfb);  // 11111011 禁用除 PIC1 以外中断
     io_out8(PIC1_IMR, 0xff);  // 11111111 禁止全部中断
-
-    return;
 }
 
 // 忽略 IRQ7
 void int_handler27(int *esp) {
     io_out8(PIC0_OCW2, 0x67);
-    return;
 }
