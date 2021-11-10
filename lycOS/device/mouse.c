@@ -1,7 +1,7 @@
 #include "mouse.h"
 #include "keyboard.h"
-#include "bootpack.h"
-#include "int.h"
+#include "../bootpack.h"
+#include "../int/int.h"
 #include "buffer.h"
 
 

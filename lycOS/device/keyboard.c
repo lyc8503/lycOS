@@ -1,6 +1,6 @@
 #include "keyboard.h"
-#include "bootpack.h"
-#include "int.h"
+#include "../bootpack.h"
+#include "../int/int.h"
 #include "buffer.h"
 
 struct FIFO8_BUF key_buf;

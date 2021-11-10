@@ -1,5 +1,5 @@
 #include "graphic.h"
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void set_palette(int start, int end, unsigned char *rgb) {
     int i, eflags;

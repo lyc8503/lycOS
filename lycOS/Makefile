@@ -1,5 +1,7 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj
 
+VPATH := ./gui:./memory:./device:./asm:./int
+
 # 路径
 TOOLPATH = ../tools/z_tools/
 INCPATH  = ../tools/z_tools/haribote/
@@ -23,28 +25,31 @@ default:
 	make img
 
 # 读入十个扇区的 initial program loader
-ipl10.bin: ipl10.nas Makefile
-	$(NASK) ipl10.nas ipl10.bin ipl10.lst
+ipl10.bin: asm/ipl10.nas Makefile
+	$(NASK) asm/ipl10.nas ipl10.bin ipl10.lst
 
 # 用于加载下面的 C 语言的汇编代码
-asmhead.bin : asmhead.nas Makefile
-	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+asmhead.bin : asm/asmhead.nas Makefile
+	$(NASK) asm/asmhead.nas asmhead.bin asmhead.lst
 
 # 将 C 语言代码编译成 gas 汇编源码
 %.gas : %.c Makefile
-	$(CC1) -o $*.gas $*.c
+	$(CC1) -o $*.gas $<
 
 # 从 gas 汇编转换为 nask 文件
 %.nas : %.gas Makefile
 	$(GAS2NASK) $*.gas $*.nas
 
 # 编译生成目标文件(包括 C 和 nasfunc.nas)
+naskfunc.obj : asm/naskfunc.nas
+	$(NASK) asm/naskfunc.nas naskfunc.obj naskfunc.lst
+
 %.obj : %.nas Makefile
 	$(NASK) $*.nas $*.obj $*.lst
 
 # ascii 字体处理
-ascii_font.bin : ascii_font.txt Makefile
-	$(MAKEFONT) ascii_font.txt ascii_font.bin
+ascii_font.bin : gui/ascii_font.txt Makefile
+	$(MAKEFONT) gui/ascii_font.txt ascii_font.bin
 
 ascii_font.obj : ascii_font.bin Makefile
 	$(BIN2OBJ) ascii_font.bin ascii_font.obj _ascfont
