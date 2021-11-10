@@ -22,4 +22,5 @@ void memman_init(struct MEM_MANAGER* man);
 unsigned int memman_available(struct MEM_MANAGER* man);
 unsigned int memman_alloc(struct MEM_MANAGER* man, unsigned int size);
 int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size);
-
+unsigned int memman_alloc_4k(struct MEM_MANAGER *man, unsigned int size);
+unsigned int memman_free_4k(struct MEM_MANAGER *man, unsigned int addr, unsigned int size);

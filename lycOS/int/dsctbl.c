@@ -1,5 +1,5 @@
 #include "dsctbl.h"
-#include "bootpack.h"
+#include "../bootpack.h"
 
 
 void init_gdtidt() {

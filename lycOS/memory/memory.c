@@ -102,3 +102,14 @@ int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size) {
     man->lost_size += size;
     return MEMMAN_FREE_SIZE_NOT_ENOUGH;
 }
+
+// 分配以 4kb 为单位的内存
+unsigned int memman_alloc_4k(struct MEM_MANAGER *man, unsigned int size) {
+    size = (size + 0xfff) & 0xfffff000;  // 向上取整
+    return memman_alloc(man, size);
+}
+
+unsigned int memman_free_4k(struct MEM_MANAGER *man, unsigned int addr, unsigned int size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memman_free(man, addr, size);
+}

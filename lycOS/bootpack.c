@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "bootpack.h"
-#include "graphic.h"
-#include "dsctbl.h"
-#include "int.h"
-#include "keyboard.h"
-#include "mouse.h"
-#include "buffer.h"
-#include "memory.h"
+#include "gui/graphic.h"
+#include "int/dsctbl.h"
+#include "int/int.h"
+#include "device/keyboard.h"
+#include "device/mouse.h"
+#include "device/buffer.h"
+#include "memory/memory.h"
 
 
 unsigned char key_data[128];
