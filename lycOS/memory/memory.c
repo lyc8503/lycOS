@@ -1,5 +1,7 @@
 #include "memory.h"
 
+struct MEM_MANAGER* sys_memman = (struct MEM_MANAGER*) MEMMAN_ADDR;
+
 // 初始化内存管理器
 void memman_init(struct MEM_MANAGER* man) {
     man->free_num = 0;

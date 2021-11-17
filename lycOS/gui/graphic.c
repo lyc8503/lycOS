@@ -40,7 +40,7 @@ void init_palette() {
     set_palette(0, 15, table_rgb);
 }
 
-void boxfill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
+void box_fill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
     int x, y;
     for (y = y0; y <= y1; y++) {
         for (x = x0; x <= x1; x++) {

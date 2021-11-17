@@ -1,3 +1,6 @@
+#ifndef LYCOS_C_BOOTPACK_H
+#define LYCOS_C_BOOTPACK_H
+
 struct BOOTINFO {
     char cyls, leds, vmode, reserve;  // 扇区数, 键盘指示灯状态, 显卡色彩模式
     short scrnx, scrny;  // 分辨率
@@ -33,3 +36,5 @@ int get_cr0(void);
 void set_cr0(int cr0);
 
 unsigned int memtest_sub(unsigned int start, unsigned int end);
+
+#endif
