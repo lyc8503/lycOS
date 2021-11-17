@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj
 
 VPATH := ./gui:./memory:./device:./asm:./int
 

@@ -1,3 +1,6 @@
+#ifndef LYCOS_C_MEMORY_H
+#define LYCOS_C_MEMORY_H
+
 // 共计 32768 - 200 个 FREE_INFO, 大小 < 256KB
 #define MEMMAN_SIZE 32568
 #define MEMMAN_ADDR 0x003c0000
@@ -6,6 +9,7 @@
 #define MEMMAN_FREE_OK 0
 #define MEMMAN_FREE_SIZE_NOT_ENOUGH -1
 
+extern struct MEM_MANAGER* sys_memman;
 
 struct FREE_INFO {
     unsigned int start, size;  // 一条可用空间信息
@@ -24,3 +28,5 @@ unsigned int memman_alloc(struct MEM_MANAGER* man, unsigned int size);
 int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size);
 unsigned int memman_alloc_4k(struct MEM_MANAGER *man, unsigned int size);
 unsigned int memman_free_4k(struct MEM_MANAGER *man, unsigned int addr, unsigned int size);
+
+#endif
