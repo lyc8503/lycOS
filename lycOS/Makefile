@@ -5,12 +5,13 @@ VPATH := ./gui:./memory:./device:./asm:./int
 # 路径
 TOOLPATH = ../tools/z_tools/
 INCPATH  = ../tools/z_tools/haribote/
-QEMU_EXE=../tools/qemu-w64-20210825/qemu-system-i386.exe
 
 # 工具位置
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
 EDIMG    = $(TOOLPATH)edimg.exe
+QEMU_EXE = ../tools/qemu-w64-20210825/qemu-system-i386.exe
+
 
 CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
@@ -22,7 +23,7 @@ BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 
 
 default:
-	make img
+	make all
 
 # 读入十个扇区的 initial program loader
 ipl10.bin: asm/ipl10.nas Makefile
@@ -78,11 +79,11 @@ lycos.img : ipl10.bin lycos.sys Makefile
 
 
 # 编译动作
-img:
+all:
 	make -r lycos.img
 
 run:
-	make img
+	make all
 	$(QEMU_EXE) -fda lycos.img
 
 clean:
@@ -95,7 +96,4 @@ clean:
 	-del bootpack.bim
 	-del bootpack.hrb
 	-del lycos.sys
-
-cleanall:
-	make clean
-	-del lycos.img	
+	-del lycos.img

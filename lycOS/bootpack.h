@@ -4,7 +4,7 @@
 struct BOOTINFO {
     char cyls, leds, vmode, reserve;  // 扇区数, 键盘指示灯状态, 显卡色彩模式
     short scrnx, scrny;  // 分辨率
-    char *vram;
+    unsigned char *vram;
 };
 
 #define BOOTINFO_ADDR 0x00000ff0

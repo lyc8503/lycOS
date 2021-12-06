@@ -1,4 +1,5 @@
 #include "memory.h"
+#include <stdio.h>
 
 struct MEM_MANAGER* sys_memman = (struct MEM_MANAGER*) MEMMAN_ADDR;
 
@@ -40,7 +41,7 @@ unsigned int memman_alloc(struct MEM_MANAGER* man, unsigned int size) {
         }
     }
 
-    return MEMMAN_OOM;  // 没有找到可用内存
+    return NULL;  // 没有找到可用内存
 }
 
 // 释放内存 (添加可用内存信息)
