@@ -8,17 +8,17 @@
 
 struct LAYER {
     int loc_x, loc_y, width, height, priority, flags;  // 其中 priority 的小的图层在下
-    char* content;
+    unsigned char* content;
 };
 
 struct LAYERCTL {
     struct LAYER* layers[MAX_LAYERS];
     int layer_num, max_x, max_y;
-    char* buf;
+    unsigned char* buf;
 };
 
 void init_layerctl(struct LAYERCTL* ctl, int max_x, int max_y);
-void layerctl_draw(struct LAYERCTL* ctl, char* target);
+void layerctl_draw(struct LAYERCTL* ctl, unsigned char* target);
 struct LAYER* alloc_layer(struct LAYERCTL* ctl, int width, int height, int loc_x, int loc_y);
 
 #endif

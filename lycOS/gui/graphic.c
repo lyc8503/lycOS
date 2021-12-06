@@ -40,16 +40,16 @@ void init_palette() {
     set_palette(0, 15, table_rgb);
 }
 
-void box_fill8(char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
+void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
     int x, y;
-    for (y = y0; y <= y1; y++) {
-        for (x = x0; x <= x1; x++) {
+    for (y = y0; y < y1; y++) {
+        for (x = x0; x < x1; x++) {
             vram[y * xsize + x] = c;
         }
     }
 }
 
-void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
+void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font) {
     int i;
     char *p, d;
 
@@ -68,7 +68,7 @@ void put_ascii_font8(char *vram, int xsize, int x, int y, char c, char *font) {
     }
 }
 
-void put_ascii_str8(char *vram, int xsize, int x, int y, char c, char *str) {
+void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, char c, char *str) {
     for (; *str != 0x00; str++) {
         put_ascii_font8(vram, xsize, x, y, c, ascfont + *str * 16);
         x += 8;

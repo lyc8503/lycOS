@@ -41,6 +41,10 @@ void MyOSMain() {
 
     // 初始化桌面背景层
     struct LAYER* bg_layer = alloc_layer(layerctl, binfo->scrnx, binfo->scrny, 0, 0);
+    // TODO: 测试层
+    struct LAYER *test = alloc_layer(layerctl, 100, 100, 100, 50);
+
+    box_fill8(test->content, test->width, COLOR8_WHITE, 0, 0, 100, 100);
 
     // 填充桌面背景色
     box_fill8(bg_layer->content, bg_layer->width, COLOR8_LIGHT_DARK_BLUE, 0, 0, bg_layer->width, bg_layer->height);
@@ -49,7 +53,9 @@ void MyOSMain() {
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
     char mem_out_str[200];
-    sprintf(mem_out_str, "Total memory: %d MB  Free: %d MB", memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024));
+    sprintf(mem_out_str, "Total memory: %d MB  Free: %d MB", memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024), test - bg_layer);
+//    sprintf(mem_out_str, "%p %p", bg_layer->content, test->content);
+
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 24, COLOR8_WHITE, mem_out_str);
 
     // 键盘分配 128 byte 缓冲区
@@ -62,6 +68,8 @@ void MyOSMain() {
 
     while(1){
         io_cli();  // 处理过程中禁止中断
+
+        layerctl_draw(layerctl, binfo->vram);
 
         if (fifo8_data_available(&key_buf) + fifo8_data_available(&mouse_buf) == 0) {
             io_stihlt();  // 接收中断并等待
