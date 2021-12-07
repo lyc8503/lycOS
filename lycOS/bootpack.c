@@ -8,6 +8,8 @@
 #include "device/buffer.h"
 #include "memory/memory.h"
 #include "gui/layer.h"
+#include "device/timer.h"
+#include "device/serial.h"
 
 
 unsigned char key_data[128];
@@ -15,25 +17,48 @@ unsigned char mouse_data[512];
 
 // 系统入口
 void MyOSMain() {
+
+    // 初始化串口
+    init_serial();
+    write_serial_str("lycOS: HelloWorld from serial!\r\n");
+    char temp[1000];
+
     // 读取启动信息
     struct BOOTINFO *binfo = (struct BOOTINFO *) BOOTINFO_ADDR;
 
-    // 初始化 gdt 和 idt
+    sprintf(temp, "bootinfo addr: %p, cyls: %02X, leds: %02X, vmode: %02X, scrnx: %u, scrny: %u, vram addr: %p\r\n",
+            binfo, binfo->cyls, binfo->leds, binfo->vmode, binfo->scrnx, binfo->scrny, binfo->vram);
+    write_serial_str(temp);
+
+    // 初始化 gdt, idt, pic 和 pit
     init_gdtidt();
-    // 初始化 pic
     init_pic();
+    init_pit();
+
+    write_serial_str("gdt, idt, pit initialization ok.\r\n");
 
     io_sti();  // CPU 接收中断
-    io_out8(PIC0_IMR, 0xf9);  // 11111001 接收 PIC1 和键盘中断
+    io_out8(PIC0_IMR, 0xf8);  // 11111000 接收 PIT, PIC1 和键盘中断
     io_out8(PIC1_IMR, 0xef);  // 11101111 接收鼠标中断
+
+    write_serial_str("ready to process int.\r\n");
 
     // 初始化调色板
     init_palette();
+
+    write_serial_str("palette init ok.\r\n");
 
     // 检查内存并初始化内存管理
     unsigned int memory_total = memtest_sub(0x00400000, 0xbfffffff);  // 最多读取到 3072 MB 内存
     memman_init(sys_memman);
     memman_free(sys_memman, 0x00400000, memory_total - 0x00400000);
+
+    sprintf(temp, "memory manager init ok. total memory: %d MB free: %d MB\r\n",
+            memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024));
+    write_serial_str(temp);
+
+    // 初始化计时器
+//    init_timer();
 
     // 初始化图层管理器
     struct LAYERCTL* layerctl = (struct LAYERCTL*) memman_alloc(sys_memman, sizeof(struct LAYERCTL));
@@ -41,22 +66,12 @@ void MyOSMain() {
 
     // 初始化桌面背景层
     struct LAYER* bg_layer = alloc_layer(layerctl, binfo->scrnx, binfo->scrny, 0, 0);
-    // TODO: 测试层
-    struct LAYER *test = alloc_layer(layerctl, 100, 100, 100, 50);
-
-    box_fill8(test->content, test->width, COLOR8_WHITE, 0, 0, 100, 100);
 
     // 填充桌面背景色
     box_fill8(bg_layer->content, bg_layer->width, COLOR8_LIGHT_DARK_BLUE, 0, 0, bg_layer->width, bg_layer->height);
 
-    // 显示 HelloWorld!
+    // 显示 GUI HelloWorld!
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
-
-    char mem_out_str[200];
-    sprintf(mem_out_str, "Total memory: %d MB  Free: %d MB", memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024), test - bg_layer);
-//    sprintf(mem_out_str, "%p %p", bg_layer->content, test->content);
-
-    put_ascii_str8(bg_layer->content, bg_layer->width, 8, 24, COLOR8_WHITE, mem_out_str);
 
     // 键盘分配 128 byte 缓冲区
     fifo8_init(&key_buf, 128, key_data);
@@ -65,6 +80,11 @@ void MyOSMain() {
 
     init_keyboard();
     enable_mouse(&mouse_dec);
+
+    // 鼠标绘制
+    struct LAYER* mouse_layer = alloc_layer(layerctl, 8, 16, 0, 0);
+    box_fill8(mouse_layer->content, mouse_layer->width, COLOR8_BLACK, 0, 0, 8, 16);
+    // TODO: 鼠标图标
 
     while(1){
         io_cli();  // 处理过程中禁止中断
@@ -91,6 +111,9 @@ void MyOSMain() {
 
                     sprintf(output, "MOUSE: %d %d %d %d %d", mouse_dec.button & 0x01, (mouse_dec.button & 0x04) / 4, (mouse_dec.button & 0x02) / 2, mouse_dec.x, mouse_dec.y);
                     put_ascii_str8(bg_layer->content, bg_layer->width, 8, bg_layer->height - 16, COLOR8_WHITE, output);
+
+                    mouse_layer->loc_x += mouse_dec.x;
+                    mouse_layer->loc_y += mouse_dec.y;
                 }
             }
         }

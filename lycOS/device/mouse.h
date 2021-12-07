@@ -1,3 +1,6 @@
+#ifndef LYCOS_C_MOUSE_H
+#define LYCOS_C_MOUSE_H
+
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE 0xf4
 
@@ -12,3 +15,5 @@ struct MOUSE_DECODE {
 void int_handler2c(int *esp);
 void enable_mouse(struct MOUSE_DECODE *m_dec);
 int mouse_decode(struct MOUSE_DECODE *m_dec, unsigned char data);
+
+#endif

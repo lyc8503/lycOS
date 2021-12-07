@@ -41,7 +41,7 @@ unsigned int memman_alloc(struct MEM_MANAGER* man, unsigned int size) {
         }
     }
 
-    return NULL;  // 没有找到可用内存
+    return (int) NULL;  // 没有找到可用内存
 }
 
 // 释放内存 (添加可用内存信息)
