@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj timer.obj serial.obj
 
 VPATH := ./gui:./memory:./device:./asm:./int
 
@@ -84,7 +84,7 @@ all:
 
 run:
 	make all
-	$(QEMU_EXE) -fda lycos.img
+	$(QEMU_EXE) -serial stdio -fda lycos.img
 
 clean:
 	-del *.bin

@@ -12,7 +12,7 @@ void init_layerctl(struct LAYERCTL* ctl, int max_x, int max_y) {
     ctl->max_y = max_y;
 
     // 输出缓冲区
-    ctl->buf = (unsigned char*) memman_alloc(sys_memman, max_x * max_y * sizeof(unsigned char));
+    ctl->buf = (unsigned char*) memman_alloc_4k(sys_memman, max_x * max_y * sizeof(unsigned char));
 }
 
 void layerctl_draw(struct LAYERCTL* ctl, unsigned char* target) {
@@ -24,8 +24,10 @@ void layerctl_draw(struct LAYERCTL* ctl, unsigned char* target) {
         for (x = 0; x < layer->width; x++){
             for (y = 0; y < layer->height; y++) {
                 if (*(layer->content + layer->width * y + x) != LAYER_TRANSPARENT &&
-                    layer->loc_y + y <= ctl->max_y &&
-                    layer->loc_x + x <= ctl->max_x) {
+                    layer->loc_y + y < ctl->max_y &&
+                    layer->loc_x + x < ctl->max_x &&
+                    layer->loc_x + x >= 0 &&
+                    layer->loc_y + y >= 0) {
                     *(ctl->buf + (layer->loc_y + y) * ctl->max_x + layer->loc_x + x) = *(layer->content + layer->width * y + x);
                 }
             }
@@ -54,10 +56,10 @@ struct LAYER* alloc_layer(struct LAYERCTL* ctl, int width, int height, int loc_x
     layer->loc_y = loc_y;
     layer->width = width;
     layer->height = height;
-    layer->content = (unsigned char*) memman_alloc(sys_memman, sizeof(unsigned char) * width * height);
+    layer->content = (unsigned char*) memman_alloc_4k(sys_memman, sizeof(unsigned char) * width * height);
 
     if (layer->content == NULL) {
-        memman_free(sys_memman, layer, sizeof(struct LAYER));
+        memman_free_4k(sys_memman, (int) layer, sizeof(struct LAYER));
         return NULL;
     }
 

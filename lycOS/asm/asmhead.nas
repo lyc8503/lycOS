@@ -16,8 +16,13 @@ VRAM        EQU         0x0ff8            ; 图像缓冲区开始的内存地址
 
         MOV        AL,0x13              ; VGA, 320x200x8bit 色彩
         MOV        AH,0x00
+;        MOV        BX,0x4107            ; VGA, 使用 1280x1024x8bit 色彩 (需要 VBE 2.0, 应该绝大部分现代机器和虚拟机都支持.)
+;        MOV        AX,0x4f02
         INT        0x10
         MOV        BYTE [VMODE],8       ; 记录画面模式
+;        MOV        WORD [SCRNX],1280
+;        MOV        WORD [SCRNY],1024
+;        MOV        DWORD [VRAM],0xe0000000
         MOV        WORD [SCRNX],320
         MOV        WORD [SCRNY],200
         MOV        DWORD [VRAM],0x000a0000

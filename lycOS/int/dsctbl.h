@@ -1,3 +1,6 @@
+#ifndef LYCOS_C_DSCTBL_H
+#define LYCOS_C_DSCTBL_H
+
 // 以 CPU 资料为基础写成的结构体
 struct SEGMENT_DESCRIPTOR {
     short limit_low, base_low;
@@ -24,3 +27,5 @@ struct GATE_DESCRIPTOR {
 void init_gdtidt();
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, unsigned int offset, int selector, int ar);
+
+#endif

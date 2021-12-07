@@ -1,3 +1,6 @@
+#ifndef LYCOS_C_INT_H
+#define LYCOS_C_INT_H
+
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -13,3 +16,5 @@
 
 void init_pic();
 void int_handler27(int *esp);
+
+#endif

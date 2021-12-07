@@ -31,6 +31,7 @@ void load_idtr(int limit, int addr);
 void asm_inthandler21();
 void asm_inthandler27();
 void asm_inthandler2c();
+void asm_inthandler20();
 
 int get_cr0(void);
 void set_cr0(int cr0);
