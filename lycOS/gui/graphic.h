@@ -22,8 +22,9 @@ extern char ascfont[4096];
 
 void set_palette(int start, int end, unsigned char *rgb);
 void init_palette();
-void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
-void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font);
-void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, char c, char *str);
+void box_fill8(unsigned char *vram, int xsize, unsigned char color, int x0, int y0, int x1, int y1);
+void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, unsigned char color, unsigned char *font);
+void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, unsigned char color, char *str);
+void put_ascii_str8_bg(unsigned char *vram, int xsize, int x, int y, unsigned char color, char *str, unsigned char bg_color);
 
 #endif

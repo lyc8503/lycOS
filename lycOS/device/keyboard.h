@@ -8,7 +8,9 @@
 #define KEYCMD_WRITE_MODE 0x60
 #define KBC_MODE 0x47
 
-extern struct FIFO8_BUF key_buf;
+#define KEYBOARD_DATA_BIAS 256
+#define KEYBOARD_DATA_MIN 256
+#define KEYBOARD_DATA_MAX 511
 
 void int_handler21(int *esp);
 void init_keyboard();

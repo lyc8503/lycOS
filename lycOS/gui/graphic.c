@@ -1,5 +1,6 @@
 #include "graphic.h"
 #include "../bootpack.h"
+#include <string.h>
 
 void set_palette(int start, int end, unsigned char *rgb) {
     int i, eflags;
@@ -40,16 +41,16 @@ void init_palette() {
     set_palette(0, 15, table_rgb);
 }
 
-void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1) {
+void box_fill8(unsigned char *vram, int xsize, unsigned char color, int x0, int y0, int x1, int y1) {
     int x, y;
     for (y = y0; y < y1; y++) {
         for (x = x0; x < x1; x++) {
-            vram[y * xsize + x] = c;
+            vram[y * xsize + x] = color;
         }
     }
 }
 
-void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font) {
+void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, unsigned char color, unsigned char *font) {
     int i;
     char *p, d;
 
@@ -57,20 +58,25 @@ void put_ascii_font8(unsigned char *vram, int xsize, int x, int y, char c, char 
     for (i = 0; i < 16; i++) {
         p = vram + (y + i) * xsize + x;
         d = font[i];
-        if ((d & 0x80) != 0) { p[0] = c; }
-        if ((d & 0x40) != 0) { p[1] = c; }
-        if ((d & 0x20) != 0) { p[2] = c; }
-        if ((d & 0x10) != 0) { p[3] = c; }
-        if ((d & 0x08) != 0) { p[4] = c; }
-        if ((d & 0x04) != 0) { p[5] = c; }
-        if ((d & 0x02) != 0) { p[6] = c; }
-        if ((d & 0x01) != 0) { p[7] = c; }
+        if ((d & 0x80) != 0) { p[0] = color; }
+        if ((d & 0x40) != 0) { p[1] = color; }
+        if ((d & 0x20) != 0) { p[2] = color; }
+        if ((d & 0x10) != 0) { p[3] = color; }
+        if ((d & 0x08) != 0) { p[4] = color; }
+        if ((d & 0x04) != 0) { p[5] = color; }
+        if ((d & 0x02) != 0) { p[6] = color; }
+        if ((d & 0x01) != 0) { p[7] = color; }
     }
 }
 
-void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, char c, char *str) {
-    for (; *str != 0x00; str++) {
-        put_ascii_font8(vram, xsize, x, y, c, ascfont + *str * 16);
+void put_ascii_str8(unsigned char *vram, int xsize, int x, int y, unsigned char color, char *str) {
+    for (; *str != '\0'; str++) {
+        put_ascii_font8(vram, xsize, x, y, color, ascfont + *str * 16);
         x += 8;
     }
+}
+
+void put_ascii_str8_bg(unsigned char *vram, int xsize, int x, int y, unsigned char color, char *str, unsigned char bg_color) {
+    box_fill8(vram, xsize, bg_color, x, y, x + 8 * strlen(str), y + 16);
+    put_ascii_str8(vram, xsize, x, y, color, str);
 }

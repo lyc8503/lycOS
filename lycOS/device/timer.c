@@ -34,7 +34,8 @@ void init_pit() {
 
 // 计时器的中断处理
 void int_handler20(int *esp) {
-    current_time += 10;
+//    current_time += 10;
+//    fifo32_put(&sys_buf, 233);
     io_out8(PIC0_OCW2, 0x60);  // 中断处理完成
 }
 

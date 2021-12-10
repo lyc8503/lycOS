@@ -1,54 +1,54 @@
 #include "buffer.h"
 
-void fifo8_init(struct FIFO8_BUF *fifo8, int size, unsigned char* buf) {
-    fifo8->buf = buf;
-    fifo8->flags = 0;
-    fifo8->free = size;
-    fifo8->size = size;
-    fifo8->next_read = 0;
-    fifo8->next_write = 0;
+void fifo32_init(struct FIFO32_BUF *fifo32, int size, unsigned int* buf) {
+    fifo32->buf = buf;
+    fifo32->flags = 0;
+    fifo32->free = size;
+    fifo32->size = size;
+    fifo32->next_read = 0;
+    fifo32->next_write = 0;
 }
 
 // 手写循环链表
-int fifo8_put(struct FIFO8_BUF *fifo8, unsigned char data) {
+int fifo32_put(struct FIFO32_BUF *fifo32, unsigned int data) {
 
     // 没有空间
-    if(fifo8->free == 0) {
-        fifo8->flags |= BUFFER_OVERFLOW_FLAG;
+    if(fifo32->free == 0) {
+        fifo32->flags |= BUFFER_OVERFLOW_FLAG;
         return BUFFER_RET_OVERFLOW;
     }
 
     // 回到开始写入
-    if (fifo8->next_write + 1 > fifo8->size - 1) {
-        fifo8->next_write -= fifo8->size;
+    if (fifo32->next_write + 1 > fifo32->size - 1) {
+        fifo32->next_write -= fifo32->size;
     }
 
     // 写入操作
-    fifo8->buf[fifo8->next_write++] = data;
+    fifo32->buf[fifo32->next_write++] = data;
 
     // 成功返回
-    fifo8->free--;
+    fifo32->free--;
     return BUFFER_RET_OK;
 }
 
 // 循环链表读取
-int fifo8_get(struct FIFO8_BUF *fifo8) {
+unsigned int fifo32_get(struct FIFO32_BUF *fifo32) {
 
-    if(fifo8->free == fifo8->size) {
+    if(fifo32->free == fifo32->size) {
         return BUFFER_RET_EMPTY;
     }
 
     // 下次读取从头开始
-    if (fifo8->next_read + 1 == fifo8->size - 1) {
-        fifo8->next_read -= fifo8->size;
+    if (fifo32->next_read + 1 == fifo32->size - 1) {
+        fifo32->next_read -= fifo32->size;
     }
 
-    int data = fifo8->buf[fifo8->next_read++];
-    fifo8->free++;
+    int data = fifo32->buf[fifo32->next_read++];
+    fifo32->free++;
 
     return data;
 }
 
-int fifo8_data_available(struct FIFO8_BUF *fifo8) {
-    return fifo8->size - fifo8->free;
+int fifo32_data_available(struct FIFO32_BUF *fifo32) {
+    return fifo32->size - fifo32->free;
 }

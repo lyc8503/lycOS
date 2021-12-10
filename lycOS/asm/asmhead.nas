@@ -9,26 +9,70 @@ VMODE       EQU         0x0ff2            ; 颜色位数
 SCRNX       EQU         0x0ff4            ; 分辨率 X
 SCRNY       EQU         0x0ff6            ; 分辨率 Y
 VRAM        EQU         0x0ff8            ; 图像缓冲区开始的内存地址
+VBEMODE     EQU         0x103             ; VESA 图形模式
 
         ORG             0xc200            ; 程序载入的内存起点
 
+[INSTRSET "i486p"]                  ; 使用 486 指令
+
 ; 画面设置
 
+; 先尝试使用高分辨率模式, 如果失败 fallback 到 320x200 模式
+
+; 检查 VBE 是否存在
+        MOV         AX,0x9000              ; 写入的目标内存 ES:DI
+        MOV         ES,AX
+        MOV         AX,0x4f00
+        INT         0x10
+        CMP         AX,0x004f
+        JNE         scrn320fallback
+
+; 检查 VBE 版本
+        MOV         AX,[ES:DI+4]
+        CMP         AX,0x0200
+        JB          scrn320fallback         ; AX < 0x0200 时, 使用 320x200 模式
+
+; 获取画面模式信息 (依然写入 ES:DI, 覆盖 VBE 版本信息)
+        MOV         CX,VBEMODE
+        MOV         AX,0x4f01
+        INT         0x10
+        CMP         AX,0x004f               ; 0x4f 代表指定的模式可以使用
+        JNE         scrn320fallback
+
+; 检查画面模式信息
+        CMP         BYTE [ES:DI+0x19],8     ; 8bit 色彩
+        JNE         scrn320fallback
+        CMP         BYTE [ES:DI+0x1b],4     ; 调色板模式
+        JNE         scrn320fallback
+        MOV         AX,[ES:DI+0x00]
+        AND         AX,0x0080
+        JZ          scrn320fallback         ; 属性模式第 7 位为 0, 失败
+
+; 画面模式切换
+        MOV         BX,VBEMODE+0x4000
+        MOV         AX,0x4f02
+        INT         0x10
+        MOV         BYTE [VMODE],8          ; 画面信息储存
+        MOV         AX,[ES:DI+0x12]
+        MOV         [SCRNX],AX
+        MOV         AX,[ES:DI+0x14]
+        MOV         [SCRNY],AX
+        MOV         EAX,[ES:DI+0x28]
+        MOV         [VRAM],EAX
+        JMP         keystatus
+
+scrn320fallback:
         MOV        AL,0x13              ; VGA, 320x200x8bit 色彩
         MOV        AH,0x00
-;        MOV        BX,0x4107            ; VGA, 使用 1280x1024x8bit 色彩 (需要 VBE 2.0, 应该绝大部分现代机器和虚拟机都支持.)
-;        MOV        AX,0x4f02
         INT        0x10
-        MOV        BYTE [VMODE],8       ; 记录画面模式
-;        MOV        WORD [SCRNX],1280
-;        MOV        WORD [SCRNY],1024
-;        MOV        DWORD [VRAM],0xe0000000
+        MOV        BYTE [VMODE],8          ; 画面信息储存
         MOV        WORD [SCRNX],320
         MOV        WORD [SCRNY],200
         MOV        DWORD [VRAM],0x000a0000
 
-; BIOS 获取键盘指示灯状态
 
+; BIOS 获取键盘指示灯状态
+keystatus:
         MOV        AH,0x02
         INT        0x16             ; keyboard BIOS
         MOV        [LEDS],AL
@@ -58,8 +102,6 @@ VRAM        EQU         0x0ff8            ; 图像缓冲区开始的内存地址
         CALL        waitkbdout      ; 等待指令执行完成
 
 ; 切换到保护模式
-
-[INSTRSET "i486p"]                  ; 使用 486 指令
 
         LGDT        [GDTR0]         ; 临时设定 GDT
         MOV         EAX,CR0
