@@ -4,9 +4,6 @@
 #include "../int/int.h"
 #include "buffer.h"
 
-
-struct FIFO8_BUF mouse_buf;
-
 struct MOUSE_DECODE mouse_dec;
 
 // IRQ12 = 鼠标
@@ -16,7 +13,7 @@ void int_handler2c(int *esp) {
     io_out8(PIC0_OCW2, 0x62);  // 通知 PIC0 IRQ02 处理完成
 
     data = io_in8(PORT_KEYDAT);
-    fifo8_put(&mouse_buf, data);
+    fifo32_put(&sys_buf, data + MOUSE_DATA_BIAS);
 }
 
 // 启用鼠标  鼠标控制电路包含在键盘控制电路中

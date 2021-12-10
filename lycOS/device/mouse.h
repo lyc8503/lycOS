@@ -4,7 +4,10 @@
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE 0xf4
 
-extern struct FIFO8_BUF mouse_buf;
+#define MOUSE_DATA_MIN 512
+#define MOUSE_DATA_MAX 767
+#define MOUSE_DATA_BIAS 512
+
 extern struct MOUSE_DECODE mouse_dec;
 
 struct MOUSE_DECODE {

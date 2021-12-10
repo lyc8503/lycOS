@@ -1,9 +1,6 @@
 #include "keyboard.h"
 #include "../bootpack.h"
 #include "../int/int.h"
-#include "buffer.h"
-
-struct FIFO8_BUF key_buf;
 
 // IRQ1 = 键盘
 void int_handler21(int *esp) {
@@ -11,7 +8,7 @@ void int_handler21(int *esp) {
     io_out8(PIC0_OCW2, 0x61);  // 通知 PIC IRO1 已经处理完成
 
     data = io_in8(PORT_KEYDAT);  // 读取数据
-    fifo8_put(&key_buf, data);
+    fifo32_put(&sys_buf, data + KEYBOARD_DATA_BIAS);
 }
 
 // 等待键盘控制电路准备完成

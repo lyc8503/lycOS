@@ -8,6 +8,7 @@ struct BOOTINFO {
 };
 
 #define BOOTINFO_ADDR 0x00000ff0
+#include "device/buffer.h"
 
 // 以下是 naskfunc 中的定义
 void io_hlt();
@@ -37,5 +38,7 @@ int get_cr0(void);
 void set_cr0(int cr0);
 
 unsigned int memtest_sub(unsigned int start, unsigned int end);
+
+extern struct FIFO32_BUF sys_buf;
 
 #endif

@@ -12,8 +12,8 @@
 #include "device/serial.h"
 
 
-unsigned char key_data[128];
-unsigned char mouse_data[512];
+unsigned int fifo_data[4096];
+struct FIFO32_BUF sys_buf;
 
 // 系统入口
 void MyOSMain() {
@@ -24,11 +24,16 @@ void MyOSMain() {
     char temp[1000];
 
     // 读取启动信息
-    struct BOOTINFO *binfo = (struct BOOTINFO *) BOOTINFO_ADDR;
+    struct BOOTINFO *binfo = (struct BOOTINFO*) BOOTINFO_ADDR;
 
     sprintf(temp, "bootinfo addr: %p, cyls: %02X, leds: %02X, vmode: %02X, scrnx: %u, scrny: %u, vram addr: %p\r\n",
             binfo, binfo->cyls, binfo->leds, binfo->vmode, binfo->scrnx, binfo->scrny, binfo->vram);
     write_serial_str(temp);
+
+    if (binfo->scrnx == 320 && binfo->scrny == 200) {
+        write_serial_str("warning: VBE features not supported. using 320x200 resolution.\r\n");
+    }
+
 
     // 初始化 gdt, idt, pic 和 pit
     init_gdtidt();
@@ -45,6 +50,13 @@ void MyOSMain() {
 
     // 初始化调色板
     init_palette();
+    int x,y;
+    char *vram = 0xe0000000;
+    for (x = 0; x < 1280; x++) {
+        for (y = 0; y < 1024; y++) {
+            vram[y * 1280 + x] = COLOR8_BRIGHT_RED;
+        }
+    }
 
     write_serial_str("palette init ok.\r\n");
 
@@ -73,10 +85,8 @@ void MyOSMain() {
     // 显示 GUI HelloWorld!
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
-    // 键盘分配 128 byte 缓冲区
-    fifo8_init(&key_buf, 128, key_data);
-    // 鼠标分配 512 byte 缓冲区
-    fifo8_init(&mouse_buf, 512, mouse_data);
+    // 系统缓冲区分配 (键盘, 鼠标, pit)
+    fifo32_init(&sys_buf, 4096, fifo_data);
 
     init_keyboard();
     enable_mouse(&mouse_dec);
@@ -89,32 +99,33 @@ void MyOSMain() {
     while(1){
         io_cli();  // 处理过程中禁止中断
 
-        layerctl_draw(layerctl, binfo->vram);
 
-        if (fifo8_data_available(&key_buf) + fifo8_data_available(&mouse_buf) == 0) {
+        if (fifo32_data_available(&sys_buf) == 0) {
             io_stihlt();  // 接收中断并等待
         } else {
-            int data = fifo8_get(&key_buf);
-            if(data != BUFFER_RET_EMPTY) {
-                box_fill8(bg_layer->content, bg_layer->width, COLOR8_BLACK, 0, bg_layer->height - 16, bg_layer->width, bg_layer->height);
+            int data = fifo32_get(&sys_buf);
+
+            if (data >= KEYBOARD_DATA_MIN && data <= KEYBOARD_DATA_MAX) {
+                data -= KEYBOARD_DATA_BIAS;
+
                 char output[1024];
+                sprintf(output, "KEYBOARD: %02X    ", data);
+                put_ascii_str8_bg(bg_layer->content, bg_layer->width, 8, binfo->scrny - 16, COLOR8_WHITE, output, COLOR8_BLACK);
+            } else if (data >= MOUSE_DATA_MIN && data <= MOUSE_DATA_MAX) {
+                data -= MOUSE_DATA_BIAS;
 
-                sprintf(output, "KEYBOARD: %02X", data);
-                put_ascii_str8(bg_layer->content, bg_layer->width, 8, binfo->scrny - 16, COLOR8_WHITE, output);
-            }
-
-            data = fifo8_get(&mouse_buf);
-            if(data != BUFFER_RET_EMPTY) {
                 if(mouse_decode(&mouse_dec, data) != 0) {
-                    box_fill8(bg_layer->content, bg_layer->width, COLOR8_BLACK, 0, bg_layer->height - 16, bg_layer->width, bg_layer->height);
                     char output[1024];
-
-                    sprintf(output, "MOUSE: %d %d %d %d %d", mouse_dec.button & 0x01, (mouse_dec.button & 0x04) / 4, (mouse_dec.button & 0x02) / 2, mouse_dec.x, mouse_dec.y);
-                    put_ascii_str8(bg_layer->content, bg_layer->width, 8, bg_layer->height - 16, COLOR8_WHITE, output);
+                    sprintf(output, "MOUSE: %d %d %d %d %d    ", mouse_dec.button & 0x01, (mouse_dec.button & 0x04) / 4, (mouse_dec.button & 0x02) / 2, mouse_dec.x, mouse_dec.y);
+                    put_ascii_str8_bg(bg_layer->content, bg_layer->width, 8, bg_layer->height - 16, COLOR8_WHITE, output, COLOR8_BLACK);
 
                     mouse_layer->loc_x += mouse_dec.x;
                     mouse_layer->loc_y += mouse_dec.y;
+                    layerctl_draw(layerctl, binfo->vram);
                 }
+            } else {
+                sprintf(temp, "Data in sys buf: %d\r\n", data);
+                write_serial_str(temp);
             }
         }
     }
