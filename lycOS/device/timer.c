@@ -2,27 +2,80 @@
 #include "../memory/memory.h"
 #include "../int/int.h"
 #include "../bootpack.h"
+#include "serial.h"
+#include <stdio.h>
 
-//struct TIMER_ENTRY *entries;
-//int size = 0;
+struct TIMERCTL *sys_timerctl;
 
-// 系统计时器启动经过的时间(毫秒)
-unsigned long long current_time;
-
-//struct TIMER_ENTRY {
-//    unsigned long long target_time;
-//    unsigned int data;
-//    struct TIMER_ENTRY* next, prev;
-//};
-//
-void init_timer() {
-    current_time = 0;
-//    entries = (struct TIMER_ENTRY*) memman_alloc_4k(sys_memman, TIMER_SIZE * sizeof(TIMER_ENTRY));
+struct TIMER* find_available_timer() {
+    int i = 0;
+    for (i = 0; i < TIMER_SIZE; i++) {
+        if (!sys_timerctl->timers[i].using_flag) {
+            sys_timerctl->timers[i].using_flag = 1;
+            return &sys_timerctl->timers[i];
+        }
+    }
+    return NULL;
 }
-//
-//int add_timer(unsigned long long time, unsigned int data) {
-//
-//}
+
+void init_timer() {
+    // 禁止中断
+    int eflags = io_get_eflags();
+    io_cli();
+
+    sys_timerctl = (struct TIMERCTL*) memman_alloc_4k(sys_memman, sizeof(struct TIMERCTL));
+    sys_timerctl->current_time = 0;
+
+    // 哨兵
+    sys_timerctl->timer0 = &sys_timerctl->timers[0];
+    sys_timerctl->timer0->using_flag = 1;
+    sys_timerctl->timer0->target_time = 0xffffffff;
+    sys_timerctl->timer0->next_timer = NULL;
+    io_set_eflags(eflags);
+}
+
+int add_timer(unsigned int time, unsigned int data) {
+    // 禁止中断
+    int eflags = io_get_eflags();
+    io_cli();
+
+    if (time <= 0 || time >= 0xffffffff - sys_timerctl->current_time) {
+        io_set_eflags(eflags);
+        return TIMER_INVALID_ARG;
+    }
+
+    struct TIMER *t = find_available_timer();
+    if (t == NULL) {
+        io_set_eflags(eflags);
+        return TIMER_SIZE_FULL;
+    }
+
+    // time 为目标时间
+    time += sys_timerctl->current_time;
+
+    // 为第一个
+    if (sys_timerctl->timer0->target_time > time) {
+        t->next_timer = sys_timerctl->timer0;
+        sys_timerctl->timer0 = t;
+    } else {
+        // 寻找插入位置并插入
+        struct TIMER *s = sys_timerctl->timer0;
+        while (s->next_timer->target_time < time) {
+            s = s->next_timer;
+        }
+        t->next_timer = s->next_timer;
+        s->next_timer = t;
+    }
+
+    // 设置相关信息
+    t->using_flag = 1;
+    t->target_time = time;
+    t->data = data;
+
+    // 恢复中断
+    io_set_eflags(eflags);
+    return 0;
+}
 
 // 初始化pit (可编程间隔型计时器)
 void init_pit() {
@@ -34,8 +87,16 @@ void init_pit() {
 
 // 计时器的中断处理
 void int_handler20(int *esp) {
-//    current_time += 10;
-//    fifo32_put(&sys_buf, 233);
+
+    // TODO: 这个可能爆 unsigned int
+    sys_timerctl->current_time += 10;
+
+    while (sys_timerctl->current_time >= sys_timerctl->timer0->target_time) {
+        sys_timerctl->timer0->using_flag = 0;
+        fifo32_put(&sys_buf, sys_timerctl->timer0->data);
+        sys_timerctl->timer0 = sys_timerctl->timer0->next_timer;
+    }
+
     io_out8(PIC0_OCW2, 0x60);  // 中断处理完成
 }
 

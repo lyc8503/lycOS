@@ -1,3 +1,7 @@
+#### Build 20211213
+
+TIMERCTL 完成.
+
 #### Build 20211210
 
 合并 FIFO Buffer 提高效率.

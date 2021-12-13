@@ -5,7 +5,6 @@
 #define MEMMAN_SIZE 32568
 #define MEMMAN_ADDR 0x003c0000
 
-#define MEMMAN_FREE_OK 0
 #define MEMMAN_FREE_SIZE_NOT_ENOUGH -1
 
 extern struct MEM_MANAGER* sys_memman;

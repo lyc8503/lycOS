@@ -12,7 +12,7 @@
 #include "device/serial.h"
 
 
-unsigned int fifo_data[4096];
+//unsigned int fifo_data[4096];
 struct FIFO32_BUF sys_buf;
 
 // 系统入口
@@ -21,6 +21,7 @@ void MyOSMain() {
     // 初始化串口
     init_serial();
     write_serial_str("lycOS: HelloWorld from serial!\r\n");
+
     char temp[1000];
 
     // 读取启动信息
@@ -34,31 +35,17 @@ void MyOSMain() {
         write_serial_str("warning: VBE features not supported. using 320x200 resolution.\r\n");
     }
 
-
     // 初始化 gdt, idt, pic 和 pit
     init_gdtidt();
     init_pic();
-    init_pit();
 
-    write_serial_str("gdt, idt, pit initialization ok.\r\n");
+    write_serial_str("gdt, idt initialization ok.\r\n");
 
     io_sti();  // CPU 接收中断
     io_out8(PIC0_IMR, 0xf8);  // 11111000 接收 PIT, PIC1 和键盘中断
     io_out8(PIC1_IMR, 0xef);  // 11101111 接收鼠标中断
 
     write_serial_str("ready to process int.\r\n");
-
-    // 初始化调色板
-    init_palette();
-    int x,y;
-    char *vram = 0xe0000000;
-    for (x = 0; x < 1280; x++) {
-        for (y = 0; y < 1024; y++) {
-            vram[y * 1280 + x] = COLOR8_BRIGHT_RED;
-        }
-    }
-
-    write_serial_str("palette init ok.\r\n");
 
     // 检查内存并初始化内存管理
     unsigned int memory_total = memtest_sub(0x00400000, 0xbfffffff);  // 最多读取到 3072 MB 内存
@@ -70,7 +57,13 @@ void MyOSMain() {
     write_serial_str(temp);
 
     // 初始化计时器
-//    init_timer();
+    init_timer();
+    init_pit();
+    write_serial_str("timer init ok.\r\n");
+
+    // 初始化调色板
+    init_palette();
+    write_serial_str("palette init ok.\r\n");
 
     // 初始化图层管理器
     struct LAYERCTL* layerctl = (struct LAYERCTL*) memman_alloc(sys_memman, sizeof(struct LAYERCTL));
@@ -86,6 +79,7 @@ void MyOSMain() {
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
 
     // 系统缓冲区分配 (键盘, 鼠标, pit)
+    unsigned int *fifo_data = (unsigned int*) memman_alloc(sys_memman, 4096 * sizeof(unsigned int));
     fifo32_init(&sys_buf, 4096, fifo_data);
 
     init_keyboard();
@@ -99,7 +93,6 @@ void MyOSMain() {
     while(1){
         io_cli();  // 处理过程中禁止中断
 
-
         if (fifo32_data_available(&sys_buf) == 0) {
             io_stihlt();  // 接收中断并等待
         } else {
@@ -111,6 +104,7 @@ void MyOSMain() {
                 char output[1024];
                 sprintf(output, "KEYBOARD: %02X    ", data);
                 put_ascii_str8_bg(bg_layer->content, bg_layer->width, 8, binfo->scrny - 16, COLOR8_WHITE, output, COLOR8_BLACK);
+                layerctl_draw(layerctl, binfo->vram);
             } else if (data >= MOUSE_DATA_MIN && data <= MOUSE_DATA_MAX) {
                 data -= MOUSE_DATA_BIAS;
 
@@ -124,7 +118,7 @@ void MyOSMain() {
                     layerctl_draw(layerctl, binfo->vram);
                 }
             } else {
-                sprintf(temp, "Data in sys buf: %d\r\n", data);
+                sprintf(temp, "Data in sys buf: %u\r\n", data);
                 write_serial_str(temp);
             }
         }

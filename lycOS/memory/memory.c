@@ -71,7 +71,7 @@ int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size) {
                 }
             }
 
-            return MEMMAN_FREE_OK;
+            return 0;
         }
     }
 
@@ -80,7 +80,7 @@ int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size) {
         if (addr + size == man->free_info[i].start) {  // 与后面合并
             man->free_info[i].start = addr;
             man->free_info[i].size += size;
-            return MEMMAN_FREE_OK;
+            return 0;
         }
     }
 
@@ -97,7 +97,7 @@ int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size) {
 
         man->free_info[i].start = addr;
         man->free_info[i].size = size;
-        return MEMMAN_FREE_OK;
+        return 0;
     }
 
     // 失败

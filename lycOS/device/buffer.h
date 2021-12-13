@@ -2,7 +2,6 @@
 #define LYCOS_C_BUFFER_H
 
 #define BUFFER_OVERFLOW_FLAG 0x00000001
-#define BUFFER_RET_OK 0
 #define BUFFER_RET_OVERFLOW -1
 #define BUFFER_RET_EMPTY 0xffffffff
 
