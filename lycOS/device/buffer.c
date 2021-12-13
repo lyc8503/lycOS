@@ -28,7 +28,7 @@ int fifo32_put(struct FIFO32_BUF *fifo32, unsigned int data) {
 
     // 成功返回
     fifo32->free--;
-    return BUFFER_RET_OK;
+    return 0;
 }
 
 // 循环链表读取

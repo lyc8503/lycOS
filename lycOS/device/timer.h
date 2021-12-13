@@ -5,13 +5,30 @@
 #define PIT_CNT0 0x0040
 
 #define TIMER_SIZE 1000
-
-extern unsigned long long current_time;
+#define TIMER_SIZE_FULL -1
+#define TIMER_INVALID_ARG -2
 
 void init_pit();
 void int_handler20(int *esp);
 
 void init_timer();
-void add_timer(unsigned long long time, unsigned char data);
+int add_timer(unsigned int time, unsigned int data);
+
+struct TIMER {
+    unsigned int target_time;
+    unsigned int data;
+
+    struct TIMER* next_timer;
+    int using_flag;
+};
+
+struct TIMERCTL {
+    unsigned int current_time;
+    struct TIMER* timer0;
+
+    struct TIMER timers[TIMER_SIZE];
+};
+
+extern struct TIMERCTL* sys_timerctl;
 
 #endif
