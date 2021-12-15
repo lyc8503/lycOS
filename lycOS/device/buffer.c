@@ -19,7 +19,7 @@ int fifo32_put(struct FIFO32_BUF *fifo32, unsigned int data) {
     }
 
     // 回到开始写入
-    if (fifo32->next_write + 1 > fifo32->size - 1) {
+    if (fifo32->next_write == fifo32->size) {
         fifo32->next_write -= fifo32->size;
     }
 
@@ -39,7 +39,7 @@ unsigned int fifo32_get(struct FIFO32_BUF *fifo32) {
     }
 
     // 下次读取从头开始
-    if (fifo32->next_read + 1 == fifo32->size - 1) {
+    if (fifo32->next_read == fifo32->size) {
         fifo32->next_read -= fifo32->size;
     }
 
