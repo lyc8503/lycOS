@@ -4,6 +4,7 @@
 #include "../bootpack.h"
 #include "serial.h"
 #include <stdio.h>
+#include "../multitask/multitask.h"
 
 struct TIMERCTL *sys_timerctl;
 
@@ -29,7 +30,7 @@ void init_timer() {
     // 哨兵
     sys_timerctl->timer0 = &sys_timerctl->timers[0];
     sys_timerctl->timer0->using_flag = 1;
-    sys_timerctl->timer0->target_time = 0xffffffff;
+    sys_timerctl->timer0->target_time = 0x12345678;
     sys_timerctl->timer0->next_timer = NULL;
     io_set_eflags(eflags);
 }
@@ -87,16 +88,33 @@ void init_pit() {
 
 // 计时器的中断处理
 void int_handler20(int *esp) {
+    io_out8(PIC0_OCW2, 0x60);  // 中断处理完成
 
     // TODO: 这个可能爆 unsigned int
     sys_timerctl->current_time += 10;
 
+    // 多任务切换
+    char task_switch_flag = 0;
+
     while (sys_timerctl->current_time >= sys_timerctl->timer0->target_time) {
+
+//        char temp[10];
+//        sprintf(temp, "%u\r\n", sys_timerctl->timer0->target_time);
+//        write_serial_str(temp);
+
         sys_timerctl->timer0->using_flag = 0;
-        fifo32_put(&sys_buf, sys_timerctl->timer0->data);
+
+        if (sys_timerctl->timer0->data != TASK_SWITCH_TIMER_DATA) {
+            fifo32_put(&sys_buf, sys_timerctl->timer0->data);
+        } else {
+            task_switch_flag = 1;
+        }
+
         sys_timerctl->timer0 = sys_timerctl->timer0->next_timer;
     }
 
-    io_out8(PIC0_OCW2, 0x60);  // 中断处理完成
+    if (task_switch_flag) {  // 要用 flag 的原因是在中断处理过程中调用任务切换可能导致 IF 设为 1, 中断嵌套产生问题
+        task_switch();
+    }
 }
 
