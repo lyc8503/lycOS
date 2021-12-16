@@ -39,6 +39,9 @@ void set_cr0(int cr0);
 
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 
+void load_tr(int tr);
+void farjmp(int eip, int cs);
+
 extern struct FIFO32_BUF sys_buf;
 
 #endif
