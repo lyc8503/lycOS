@@ -20,20 +20,21 @@ struct TSS32 {
 };
 
 struct TASK {
-    int sel, flags;  // sel(selector) 为 GDT 编号
+    int sel, flags, priority;  // sel(selector) 为 GDT 编号
     struct TSS32 tss;
 };
 
 struct TASKCTL {
-    int running_counter;
-    int current_running;
+    int len_tasks;
+    int current_index;
     struct TASK *tasks[TASK_SIZE];
     struct TASK task0[TASK_SIZE];
 };
 
 struct TASK* new_task();
 struct TASK* task_init();
-void run_task(struct TASK* task);
+void run_task(struct TASK* task, int priority);
 void task_switch();
+void task_sleep(struct TASK* task);
 
 #endif

@@ -1,12 +1,15 @@
 #include "buffer.h"
+#include <stdio.h>
 
-void fifo32_init(struct FIFO32_BUF *fifo32, int size, unsigned int* buf) {
+void fifo32_init(struct FIFO32_BUF *fifo32, int size, unsigned int* buf, struct TASK* task) {
     fifo32->buf = buf;
     fifo32->flags = 0;
     fifo32->free = size;
     fifo32->size = size;
     fifo32->next_read = 0;
     fifo32->next_write = 0;
+
+    fifo32->task = task;
 }
 
 // 手写循环链表
@@ -28,6 +31,14 @@ int fifo32_put(struct FIFO32_BUF *fifo32, unsigned int data) {
 
     // 成功返回
     fifo32->free--;
+
+    // 唤醒任务
+    if (fifo32->task != NULL) {
+        if (fifo32->task->flags != TASK_ACTIVE_FLAG) {
+            run_task(fifo32->task, -1);
+        }
+    }
+
     return 0;
 }
 

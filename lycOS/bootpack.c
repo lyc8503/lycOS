@@ -16,9 +16,28 @@
 //unsigned int fifo_data[4096];
 struct FIFO32_BUF sys_buf;
 
+
+struct LAYER* test;
+int counter = 0;
 void multitask_test() {
     while (1) {
-//        write_serial_str("another task!\r\n");
+        counter++;
+        if (counter % 100000 == 0) {
+            char temp[100];
+            sprintf(temp, "task1: %d", counter);
+            put_ascii_str8_bg(test->content, test->width, 8, ((struct BOOTINFO*) BOOTINFO_ADDR)->scrny - 16 * 10, COLOR8_WHITE, temp, COLOR8_BLACK);
+        }
+    }
+}
+int counter2 = 0;
+void multitask_test2() {
+    while (1) {
+        counter2++;
+        if (counter2 % 100000 == 0) {
+            char temp[100];
+            sprintf(temp, "task2: %d", counter2);
+            put_ascii_str8_bg(test->content, test->width, 8, ((struct BOOTINFO*) BOOTINFO_ADDR)->scrny - 16 * 9, COLOR8_WHITE, temp, COLOR8_BLACK);
+        }
     }
 }
 
@@ -43,7 +62,6 @@ void MyOSMain() {
         write_serial_str("warning: VBE features not supported. using 320x200 resolution.\r\n");
     }
 
-
     // 初始化 gdt, idt, pic
     init_gdtidt();
     init_pic();
@@ -58,26 +76,28 @@ void MyOSMain() {
             memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024));
     write_serial_str(temp);
 
+    // 初始化计时器
+    init_timer();
+    init_pit();
+    write_serial_str("timer init ok.\r\n");
+
+    // 多任务
+    struct TASK *t_main = task_init();
+    write_serial_str("multitask init.\r\n");
+
     // 系统缓冲区分配 (键盘, 鼠标, pit)
     unsigned int *fifo_data = (unsigned int*) memman_alloc(sys_memman, 4096 * sizeof(unsigned int));
     if (fifo_data == NULL) {
         write_serial_str("ERROR: fifo data alloc failed!\r\n");
     }
-    fifo32_init(&sys_buf, 4096, fifo_data);
+    fifo32_init(&sys_buf, 4096, fifo_data, t_main);
     write_serial_str("sys buffer initialization ok.\r\n");
-
 
     // TODO: 启动时可能卡在这里
     io_sti();  // CPU 接收中断
     io_out8(PIC0_IMR, 0xf8);  // 11111000 接收 PIT, PIC1 和键盘中断
     io_out8(PIC1_IMR, 0xef);  // 11101111 接收鼠标中断
-
     write_serial_str("ready to process int.\r\n");
-
-    // 初始化计时器
-    init_timer();
-    init_pit();
-    write_serial_str("timer init ok.\r\n");
 
     // 初始化键盘鼠标
     init_keyboard();
@@ -95,12 +115,13 @@ void MyOSMain() {
     // 初始化桌面背景层
     struct LAYER* bg_layer = alloc_layer(layerctl, binfo->scrnx, binfo->scrny, 0, 0);
 
+    test = bg_layer;
+
     // 填充桌面背景色
     box_fill8(bg_layer->content, bg_layer->width, COLOR8_LIGHT_DARK_BLUE, 0, 0, bg_layer->width, bg_layer->height);
 
     // 显示 GUI HelloWorld!
     put_ascii_str8(bg_layer->content, bg_layer->width, 8, 8, COLOR8_WHITE, "HelloWorld from lycOS!");
-
 
     // 鼠标绘制
     struct LAYER* mouse_layer = alloc_layer(layerctl, 8, 16, 0, 0);
@@ -108,11 +129,10 @@ void MyOSMain() {
     // TODO: 鼠标图标
 
     // 图像刷新计时器: 30 fps
-    add_timer(33, 1);
+    add_timer(300, 1);
 
     // 多任务测试
-    struct TASK* t = task_init();
-    t = new_task();
+    struct TASK *t = new_task();
     t->tss.esp = memman_alloc_4k(sys_memman, 64 * 1024) + 64 * 1024;
     t->tss.eip = (int) &multitask_test;
     t->tss.es = 8;
@@ -121,19 +141,36 @@ void MyOSMain() {
     t->tss.ds = 8;
     t->tss.fs = 8;
     t->tss.gs = 8;
-    add_timer(3000, 66);
 
+    run_task(t, 1);
+
+    struct TASK *t2 = new_task();
+    t2->tss.esp = memman_alloc_4k(sys_memman, 64 * 1024) + 64 * 1024;
+    t2->tss.eip = (int) &multitask_test2;
+    t2->tss.es = 8;
+    t2->tss.cs = 8 * 2;
+    t2->tss.ss = 8;
+    t2->tss.ds = 8;
+    t2->tss.fs = 8;
+    t2->tss.gs = 8;
+
+    run_task(t2, 2);
+
+    write_serial_str("enter mainloop.\r\n");
     while(1){
         io_cli();  // 处理过程中禁止中断
 
         if (fifo32_data_available(&sys_buf) == 0) {
-            io_stihlt();  // 接收中断并等待
+//            write_serial_str("sleep.\r\n");
+            io_sti();
+            task_sleep(t_main);  // 主动休眠
+//            io_stihlt();  // 接收中断并等待
         } else {
             int data = fifo32_get(&sys_buf);
 
             if (data == 1) {
                 layerctl_draw(layerctl, binfo->vram);
-                add_timer(33, 1);
+                add_timer(300, 1);
             } else if (data >= KEYBOARD_DATA_MIN && data <= KEYBOARD_DATA_MAX) {
                 data -= KEYBOARD_DATA_BIAS;
 
@@ -155,7 +192,6 @@ void MyOSMain() {
                 sprintf(temp, "Data in sys buf: %u\r\n", data);
                 write_serial_str(temp);
 
-                run_task(t);
             }
         }
     }
