@@ -1,10 +1,10 @@
 #include "timer.h"
+#include <stdio.h>
 #include "../memory/memory.h"
 #include "../int/int.h"
 #include "../bootpack.h"
 #include "serial.h"
-#include <stdio.h>
-#include "../multitask/multitask.h"
+
 
 struct TIMERCTL *sys_timerctl;
 

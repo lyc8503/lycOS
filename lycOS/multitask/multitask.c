@@ -54,41 +54,92 @@ struct TASK* task_init() {
 
     struct TASK* task = new_task();
     task->flags = TASK_ACTIVE_FLAG;  // 活动中
-    taskctl->running_counter = 1;
-    taskctl->current_running = 0;
+    task->priority = 5;
+    taskctl->len_tasks = 1;
+    taskctl->current_index = 0;
 
     taskctl->tasks[0] = task;
     load_tr(task->sel);
 
     // timer.c 中特别判断了 TASK_SWITCH_TIMER_DATA
-    add_timer(10, TASK_SWITCH_TIMER_DATA);
+    add_timer(5, TASK_SWITCH_TIMER_DATA);
 
     return task;
 }
 
-// 运行一个任务
-void run_task(struct TASK* task) {
-    task->flags = TASK_ACTIVE_FLAG;
-    taskctl->tasks[taskctl->running_counter++] = task;
+// 运行一个任务(对已经运行的 task 可修改优先级)
+void run_task(struct TASK* task, int priority) {
+    if (priority > 0) {
+        task->priority = priority;
+    }
+
+    if (task->flags != TASK_ACTIVE_FLAG) {
+        task->flags = TASK_ACTIVE_FLAG;
+        taskctl->tasks[taskctl->len_tasks++] = task;
+    }
 }
 
 // 切换任务(由 timer.c 调用)
 void task_switch() {
-    add_timer(10, TASK_SWITCH_TIMER_DATA);
 
-    char temp[40];
-    sprintf(temp, "BEFORE: running: %d count: %d fjmp: %d\r\n", taskctl->current_running, taskctl->running_counter, taskctl->tasks[taskctl->current_running]->sel);
-    write_serial_str(temp);
+    char temp[100];
+//    sprintf(temp, "BEFORE: running: %d count: %d fjmp: %d\r\n", taskctl->current_index, taskctl->len_tasks, taskctl->tasks[taskctl->current_index]->sel);
+//    write_serial_str(temp);
 
-    if (taskctl->running_counter >= 2) {
-        taskctl->current_running++;
-        if (taskctl->current_running == taskctl->running_counter) {
-            taskctl->current_running = 0;
+    taskctl->current_index++;
+    if (taskctl->current_index == taskctl->len_tasks) {
+        taskctl->current_index = 0;
+    }
+
+    sprintf(temp, "running: %d count: %d fjmp: %d priority: %d\r\n",
+            taskctl->current_index,
+            taskctl->len_tasks,
+            taskctl->tasks[taskctl->current_index]->sel,
+            taskctl->tasks[taskctl->current_index]->priority);
+//    write_serial_str(temp);
+
+    add_timer(taskctl->tasks[taskctl->current_index]->priority * 10, TASK_SWITCH_TIMER_DATA);
+
+    if (taskctl->len_tasks >= 2) {
+        farjmp(0, taskctl->tasks[taskctl->current_index]->sel);
+    }
+}
+
+// 任务休眠
+void task_sleep(struct TASK* task) {
+    int i = 0, switch_flag = 0;
+
+    if (task->flags != TASK_ACTIVE_FLAG) {
+        return;
+    }
+
+    // 如果要休眠的是当前任务, 设置 switch_flag = 1
+    if (task == taskctl->tasks[taskctl->current_index]) {
+        switch_flag = 1;
+    }
+
+    // 寻找位置
+    for (i = 0; i < taskctl->len_tasks; i++) {
+        if (taskctl->tasks[i] == task) {
+            break;
         }
+    }
 
-        sprintf(temp, "running: %d count: %d fjmp: %d\r\n", taskctl->current_running, taskctl->running_counter, taskctl->tasks[taskctl->current_running]->sel);
-        write_serial_str(temp);
+    taskctl->len_tasks--;
+    // 移动成员
+    if (i < taskctl->current_index) {
+        taskctl->current_index--;
+    }
 
-        farjmp(0, taskctl->tasks[taskctl->current_running]->sel);
+    for (; i < taskctl->len_tasks; i++) {
+        taskctl->tasks[i] = taskctl->tasks[i + 1];
+    }
+
+    task->flags = TASK_USING_FLAG;
+    if (switch_flag) {
+        if (taskctl->current_index >= taskctl->len_tasks) {
+            taskctl->current_index = 0;
+        }
+        farjmp(0, taskctl->tasks[taskctl->current_index]->sel);
     }
 }
