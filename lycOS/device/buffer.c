@@ -35,7 +35,7 @@ int fifo32_put(struct FIFO32_BUF *fifo32, unsigned int data) {
     // 唤醒任务
     if (fifo32->task != NULL) {
         if (fifo32->task->flags != TASK_ACTIVE_FLAG) {
-            run_task(fifo32->task, -1);
+            run_task(fifo32->task, -1, -1);
         }
     }
 

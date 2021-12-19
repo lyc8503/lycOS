@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "bootpack.h"
+#include <stdio.h>
 #include "gui/graphic.h"
 #include "int/dsctbl.h"
 #include "int/int.h"
@@ -129,7 +129,7 @@ void MyOSMain() {
     // TODO: 鼠标图标
 
     // 图像刷新计时器: 30 fps
-    add_timer(300, 1);
+    add_timer(33, 1);
 
     // 多任务测试
     struct TASK *t = new_task();
@@ -142,7 +142,7 @@ void MyOSMain() {
     t->tss.fs = 8;
     t->tss.gs = 8;
 
-    run_task(t, 1);
+    run_task(t, 1, 1);
 
     struct TASK *t2 = new_task();
     t2->tss.esp = memman_alloc_4k(sys_memman, 64 * 1024) + 64 * 1024;
@@ -154,14 +154,13 @@ void MyOSMain() {
     t2->tss.fs = 8;
     t2->tss.gs = 8;
 
-    run_task(t2, 2);
+    run_task(t2, 1, 10);
 
     write_serial_str("enter mainloop.\r\n");
     while(1){
         io_cli();  // 处理过程中禁止中断
 
         if (fifo32_data_available(&sys_buf) == 0) {
-//            write_serial_str("sleep.\r\n");
             io_sti();
             task_sleep(t_main);  // 主动休眠
 //            io_stihlt();  // 接收中断并等待
@@ -169,8 +168,8 @@ void MyOSMain() {
             int data = fifo32_get(&sys_buf);
 
             if (data == 1) {
+                add_timer(33, 1);
                 layerctl_draw(layerctl, binfo->vram);
-                add_timer(300, 1);
             } else if (data >= KEYBOARD_DATA_MIN && data <= KEYBOARD_DATA_MAX) {
                 data -= KEYBOARD_DATA_BIAS;
 
