@@ -10,6 +10,12 @@ struct BOOTINFO {
 #define BOOTINFO_ADDR 0x00000ff0
 #include "device/buffer.h"
 
+#ifdef DEBUG
+#define ASSERT(f) assert(f)
+#else
+#define ASSERT(f) do { } while (0)
+#endif
+
 // 以下是 naskfunc 中的定义
 void io_hlt();
 void io_cli();
