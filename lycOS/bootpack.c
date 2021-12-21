@@ -11,6 +11,7 @@
 #include "device/timer.h"
 #include "device/serial.h"
 #include "multitask/multitask.h"
+#include "device/pci/pci.h"
 
 
 //unsigned int fifo_data[4096];
@@ -155,6 +156,9 @@ void MyOSMain() {
     t2->tss.gs = 8;
 
     run_task(t2, 1, 10);
+
+    init_pci();
+    write_serial_str("pci init ok.\r\n");
 
     write_serial_str("enter mainloop.\r\n");
     while(1){
