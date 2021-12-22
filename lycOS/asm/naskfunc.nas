@@ -18,6 +18,7 @@
         GLOBAL      _get_cr0, _set_cr0
         GLOBAL      _memtest_sub
         GLOBAL      _farjmp, _load_tr
+        GLOBAL      __alloca
         EXTERN      _int_handler21, _int_handler27, _int_handler2c, _int_handler20  ; C 中的外部函数
 
 ; 以下是真正的函数
@@ -212,3 +213,8 @@ _load_tr:                                       ; void load_tr(int tr);
 _farjmp:                                        ; void farjmp(int eip, int cs);
         JMP     FAR [ESP+4]                     ; eip, cs
         RET
+
+__alloca:
+        ADD EAX,-4
+        SUB ESP,EAX
+        JMP DWORD [ESP+EAX] ; 代替RET
