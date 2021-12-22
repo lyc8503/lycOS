@@ -9,7 +9,6 @@
 #include "memory/memory.h"
 #include "gui/layer.h"
 #include "device/timer.h"
-#include "device/serial.h"
 #include "multitask/multitask.h"
 #include "device/pci/pci.h"
 
@@ -48,66 +47,60 @@ void MyOSMain() {
 
     // 初始化串口
     init_serial();
-    write_serial_str("lycOS: HelloWorld from serial!\r\n");
-
-    char temp[1000];
+    printk("lycOS: HelloWorld from serial!\r\n");
 
     // 读取启动信息
     struct BOOTINFO *binfo = (struct BOOTINFO*) BOOTINFO_ADDR;
 
-    sprintf(temp, "bootinfo addr: %p, cyls: %02X, leds: %02X, vmode: %02X, scrnx: %u, scrny: %u, vram addr: %p\r\n",
-            binfo, binfo->cyls, binfo->leds, binfo->vmode, binfo->scrnx, binfo->scrny, binfo->vram);
-    write_serial_str(temp);
+    printk("bootinfo addr: %p, cyls: %02X, leds: %02X, vmode: %02X, scrnx: %u, scrny: %u, vram addr: %p\r\n",
+           binfo, binfo->cyls, binfo->leds, binfo->vmode, binfo->scrnx, binfo->scrny, binfo->vram);
 
     if (binfo->scrnx == 320 && binfo->scrny == 200) {
-        write_serial_str("warning: VBE features not supported. using 320x200 resolution.\r\n");
+        printk("warning: VBE features not supported. using 320x200 resolution.\r\n");
     }
 
     // 初始化 gdt, idt, pic
     init_gdtidt();
     init_pic();
-    write_serial_str("gdt, idt initialization ok.\r\n");
+    printk("gdt, idt initialization ok.\r\n");
 
     // 检查内存并初始化内存管理
     unsigned int memory_total = memtest_sub(0x00400000, 0xbfffffff);  // 最多读取到 3072 MB 内存
     memman_init(sys_memman);
     memman_free(sys_memman, 0x00400000, memory_total - 0x00400000);
 
-    sprintf(temp, "memory manager init ok. total memory: %d MB free: %d MB\r\n",
+    printk("memory manager init ok. total memory: %d MB free: %d MB\r\n",
             memory_total / (1024 * 1024), memman_available(sys_memman) / (1024 * 1024));
-    write_serial_str(temp);
 
     // 初始化计时器
     init_timer();
     init_pit();
-    write_serial_str("timer init ok.\r\n");
+    printk("timer init ok.\r\n");
 
     // 多任务
     struct TASK *t_main = task_init();
-    write_serial_str("multitask init.\r\n");
+    printk("multitask init.\r\n");
 
     // 系统缓冲区分配 (键盘, 鼠标, pit)
     unsigned int *fifo_data = (unsigned int*) memman_alloc(sys_memman, 4096 * sizeof(unsigned int));
-    if (fifo_data == NULL) {
-        write_serial_str("ERROR: fifo data alloc failed!\r\n");
-    }
+    ASSERT(fifo_data != NULL);
     fifo32_init(&sys_buf, 4096, fifo_data, t_main);
-    write_serial_str("sys buffer initialization ok.\r\n");
+    printk("sys buffer initialization ok.\r\n");
 
     // TODO: 启动时可能卡在这里
     io_sti();  // CPU 接收中断
     io_out8(PIC0_IMR, 0xf8);  // 11111000 接收 PIT, PIC1 和键盘中断
     io_out8(PIC1_IMR, 0xef);  // 11101111 接收鼠标中断
-    write_serial_str("ready to process int.\r\n");
+    printk("ready to process int.\r\n");
 
     // 初始化键盘鼠标
     init_keyboard();
     enable_mouse(&mouse_dec);
-    write_serial_str("keyboard & mouse initialization ok.\r\n");
+    printk("keyboard & mouse initialization ok.\r\n");
 
     // 初始化调色板
     init_palette();
-    write_serial_str("palette init ok.\r\n");
+    printk("palette init ok.\r\n");
 
     // 初始化图层管理器
     struct LAYERCTL* layerctl = (struct LAYERCTL*) memman_alloc(sys_memman, sizeof(struct LAYERCTL));
@@ -158,9 +151,9 @@ void MyOSMain() {
     run_task(t2, 1, 10);
 
     init_pci();
-    write_serial_str("pci init ok.\r\n");
+    printk("pci init ok.\r\n");
 
-    write_serial_str("enter mainloop.\r\n");
+    printk("enter mainloop.\r\n");
     while(1){
         io_cli();  // 处理过程中禁止中断
 
@@ -192,9 +185,7 @@ void MyOSMain() {
                     mouse_layer->loc_y += mouse_dec.y;
                 }
             } else {
-                sprintf(temp, "Data in sys buf: %u\r\n", data);
-                write_serial_str(temp);
-
+                printk("Data in sys buf: %u\r\n", data);
             }
         }
     }

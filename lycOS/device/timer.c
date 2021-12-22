@@ -3,7 +3,6 @@
 #include "../memory/memory.h"
 #include "../int/int.h"
 #include "../bootpack.h"
-#include "serial.h"
 
 
 struct TIMERCTL *sys_timerctl;
@@ -97,10 +96,6 @@ void int_handler20(int *esp) {
     char task_switch_flag = 0;
 
     while (sys_timerctl->current_time >= sys_timerctl->timer0->target_time) {
-
-//        char temp[10];
-//        sprintf(temp, "%u\r\n", sys_timerctl->timer0->target_time);
-//        write_serial_str(temp);
 
         sys_timerctl->timer0->using_flag = 0;
 

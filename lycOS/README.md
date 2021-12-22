@@ -1,3 +1,13 @@
+#### Build 20211222
+
+alloca 完成.
+
+宏定义完成的 ASSERT 和 printk, 代码简化.
+
+AHCI 驱动实现中...
+
+规范化 uint8_t, uint16_t, uint32_t, uint64_t wip.
+
 #### Build 20211221
 
 PCI 相关代码. (准备 ~~IDE~~ AHCI 驱动及 FAT32 文件系统.)

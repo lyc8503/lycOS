@@ -4,7 +4,6 @@
 #include "../int/dsctbl.h"
 #include "../bootpack.h"
 #include "../device/timer.h"
-#include "../device/serial.h"
 
 struct TASKCTL* taskctl;
 
@@ -33,16 +32,15 @@ void add_task(struct TASK* task) {
 // 删除一个任务
 void remove_task(struct TASK* task) {
     struct TASKLEVEL *tl = &taskctl->task_levels[task->level];
-    int i, flag = 0;
+    int i;
 
     for (i = 0; i < tl->len_tasks; i++) {
         if (tl->tasks[i] == task) {
-            flag = 1;
             break;
         }
     }
 
-    ASSERT(flag == 1);
+    ASSERT(i < tl->len_tasks);
 
     tl->len_tasks--;
     if (i < tl->current_index) {
@@ -62,14 +60,13 @@ void remove_task(struct TASK* task) {
 
 // 切换任务等级
 void switch_task_level() {
-    int i, flag = 0;
+    int i;
     for (i = 0; i < LEVEL_SIZE; i++) {
         if (taskctl->task_levels[i].len_tasks > 0) {
-            flag = 1;
             break;
         }
     }
-    ASSERT(flag == 1);
+    ASSERT(i < LEVEL_SIZE);
 
     taskctl->current_level = i;
     taskctl->level_change_flag = 0;
@@ -194,14 +191,12 @@ void task_switch() {
         tl = &taskctl->task_levels[taskctl->current_level];
     }
 
-//    char temp[100];
-//    sprintf(temp, "lv: %d running: %d count: %d fjmp: %d priority: %d\r\n",
+//    printk("lv: %d running: %d count: %d fjmp: %d priority: %d\r\n",
 //            taskctl->current_level,
 //            tl->current_index,
 //            tl->len_tasks,
 //            tl->tasks[tl->current_index]->sel,
 //            tl->tasks[tl->current_index]->priority);
-//    write_serial_str(temp);
 
     new_task = tl->tasks[tl->current_index];
     add_timer(new_task->priority * 10, TASK_SWITCH_TIMER_DATA);
