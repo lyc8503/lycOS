@@ -84,7 +84,14 @@ all:
 
 run:
 	make all
-	$(QEMU_EXE) -serial stdio -fda lycos.img
+	$(QEMU_EXE) \
+	-serial stdio \
+ 	-boot a \
+ 	-fda lycos.img \
+ 	-m 2G \
+ 	-drive id=disk,file=test.img,if=none,format=raw \
+ 	-device ahci,id=ahci \
+ 	-device ide-hd,drive=disk,bus=ahci.0
 
 clean:
 	-del *.bin

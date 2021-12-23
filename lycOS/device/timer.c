@@ -89,8 +89,9 @@ void init_pit() {
 void int_handler20(int *esp) {
     io_out8(PIC0_OCW2, 0x60);  // 中断处理完成
 
-    // TODO: 这个可能爆 unsigned int
     sys_timerctl->current_time += 10;
+
+    ASSERT(sys_timerctl->current_time < 0xffffff00);
 
     // 多任务切换
     char task_switch_flag = 0;

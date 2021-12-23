@@ -1,6 +1,8 @@
 #include "pci.h"
 #include <stdio.h>
 #include "../../bootpack.h"
+#include "ahci.h"
+
 
 #define PCI_CONFIG_ADDRESS 0xCF8
 #define PCI_CONFIG_DATA 0xCFC
@@ -57,8 +59,16 @@ void check_function(uint8_t bus, uint8_t device, uint8_t function) {
     printk("class code / sub: %x\r\n", pci_config_read16(bus, device, function, 0xA));
 
     // AHCI
-    if (pci_config_read16(bus, device, function, 0xA) == 0x0601) {
+    if (pci_config_read16(bus, device, function, 0xA) == 0x0106) {
         printk("AHCI device found!\r\n");
+        uint32_t bar5 = (((uint32_t) pci_config_read16(bus, device, function, 0x26) << 16) +
+                pci_config_read16(bus, device, function, 0x24)) & 0xFFFFFFF0;
+
+        printk("bar5 addr: %p\r\n", bar5);
+
+        printk("command: %p\r\n", pci_config_read16(bus, device, function, 0x4));
+
+        init_ahci(bar5);
 
     }
 }
