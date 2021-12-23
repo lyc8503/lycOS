@@ -13,10 +13,10 @@ struct BOOTINFO {
 #include "device/serial.h"
 
 typedef unsigned char uint8_t;
-
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
+
 // 以下是 naskfunc 中的定义
 void io_hlt();
 
@@ -58,12 +58,13 @@ do {                                    \
     write_serial_str(temp_k);           \
 } while(0)
 
-#define ASSERT(x)                                                                                       \
+#define ASSERT(expr)                                                                                    \
 do {                                                                                                    \
-    if (!(x)) {                                                                                         \
+    if (!(expr)) {                                                                                      \
         io_cli();                                                                                       \
-        printk("[ASSERT FAILED] file=%s, function=%s, line=%d\n", __FILE__, __FUNCTION__, __LINE__);    \
-        while (1);                                                                                      \
+        printk("[ASSERT FAILED] file=%s, function=%s, line=%d, caller=%p\r\n",                          \
+        __FILE__, __FUNCTION__, __LINE__, __builtin_return_address(0));                                 \
+        while (1) io_hlt();                                                                             \
     }                                                                                                   \
 } while(0)
 
