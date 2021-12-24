@@ -1,7 +1,11 @@
 #include "ahci.h"
 #include <string.h>
-#include "../../bootpack.h"
 #include "../../memory/memory.h"
+#include "drive.h"
+
+#define trace_ahci(format, args...) do {                    \
+    dprintk("[AHCI:%d] " format "\r\n", __LINE__, ##args);  \
+} while(0)
 
 // reference: https://wiki.osdev.org/AHCI
 
@@ -165,54 +169,6 @@ typedef struct tagFIS_DMA_SETUP {
     uint32_t resvd;          //Reserved
 
 } FIS_DMA_SETUP;
-
-// 单个 HBA 端口
-typedef volatile struct tagHBA_PORT {
-    uint32_t clb;        // 0x00, command list base address, 1K-byte aligned
-    uint32_t clbu;        // 0x04, command list base address upper 32 bits
-    uint32_t fb;        // 0x08, FIS base address, 256-byte aligned
-    uint32_t fbu;        // 0x0C, FIS base address upper 32 bits
-    uint32_t is;        // 0x10, interrupt status
-    uint32_t ie;        // 0x14, interrupt enable
-    uint32_t cmd;        // 0x18, command and status
-    uint32_t rsv0;        // 0x1C, Reserved
-    uint32_t tfd;        // 0x20, task file data
-    uint32_t sig;        // 0x24, signature
-    uint32_t ssts;        // 0x28, SATA status (SCR0:SStatus)
-    uint32_t sctl;        // 0x2C, SATA control (SCR2:SControl)
-    uint32_t serr;        // 0x30, SATA error (SCR1:SError)
-    uint32_t sact;        // 0x34, SATA active (SCR3:SActive)
-    uint32_t ci;        // 0x38, command issue
-    uint32_t sntf;        // 0x3C, SATA notification (SCR4:SNotification)
-    uint32_t fbs;        // 0x40, FIS-based switch control
-    uint32_t rsv1[11];    // 0x44 ~ 0x6F, Reserved
-    uint32_t vendor[4];    // 0x70 ~ 0x7F, vendor specific
-} HBA_PORT;
-
-// HBA 内存映射区域内容
-volatile struct tagHBA_MEM {
-    // 0x00 - 0x2B, Generic Host Control
-    uint32_t cap;        // 0x00, Host capability
-    uint32_t ghc;        // 0x04, Global host control
-    uint32_t is;        // 0x08, Interrupt status
-    uint32_t pi;        // 0x0C, Port implemented
-    uint32_t vs;        // 0x10, Version
-    uint32_t ccc_ctl;    // 0x14, Command completion coalescing control
-    uint32_t ccc_pts;    // 0x18, Command completion coalescing ports
-    uint32_t em_loc;        // 0x1C, Enclosure management location
-    uint32_t em_ctl;        // 0x20, Enclosure management control
-    uint32_t cap2;        // 0x24, Host capabilities extended
-    uint32_t bohc;        // 0x28, BIOS/OS handoff control and status
-
-    // 0x2C - 0x9F, Reserved
-    uint8_t rsv[0xA0 - 0x2C];
-
-    // 0xA0 - 0xFF, Vendor specific registers
-    uint8_t vendor[0x100 - 0xA0];
-
-    // 0x100 - 0x10FF, Port control registers
-    HBA_PORT ports[1];    // 1 ~ 32
-};
 
 // HBA FIS 的设置
 typedef volatile struct tagHBA_FIS {
@@ -399,7 +355,7 @@ static int check_type(HBA_PORT *port) {
     }
 }
 
-void probe_port(HBA_MEM *abar) {
+void probe_port(HBA_MEM *abar, DRIVECTL* ctl) {
     // Search disk in implemented ports
     uint32_t pi = abar->pi;
     int i = 0;
@@ -407,17 +363,18 @@ void probe_port(HBA_MEM *abar) {
         if (pi & 1) {
             int dt = check_type(&abar->ports[i]);
             if (dt == AHCI_DEV_SATA) {
-                printk("SATA drive found at port %d\r\n", i);
-                port_rebase(&abar->ports[i], i);
-                printk("Rebase OK.\r\n");
+                trace_ahci("SATA drive found at port %d", i);
+                add_drive(ctl, AHCI_SATA_DRIVE, &abar->ports[i]);
+//                port_rebase(&abar->ports[i], i);
+//                trace_ahci("Rebase OK.");
             } else if (dt == AHCI_DEV_SATAPI) {
-                printk("SATAPI drive found at port %d\r\n", i);
+                trace_ahci("SATAPI drive found at port %d", i);
             } else if (dt == AHCI_DEV_SEMB) {
-                printk("SEMB drive found at port %d\r\n", i);
+                trace_ahci("SEMB drive found at port %d", i);
             } else if (dt == AHCI_DEV_PM) {
-                printk("PM drive found at port %d\r\n", i);
+                trace_ahci("PM drive found at port %d", i);
             } else {
-                printk("No drive found at port %d\r\n", i);
+                trace_ahci("No drive found at port %d", i);
             }
         }
 
@@ -446,7 +403,7 @@ int find_cmdslot(HBA_PORT *port) {
             return i;
         slots >>= 1;
     }
-    printk("Cannot find free command list entry.\r\n");
+    trace_ahci("Cannot find free command list entry.");
     return -1;
 }
 
@@ -505,7 +462,7 @@ int read_lba48(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count,
         spin++;
     }
     if (spin == 1000000) {
-        printk("Port is hung.\r\n");
+        trace_ahci("Port is hung.");
         return 0;
     }
 
@@ -519,29 +476,20 @@ int read_lba48(HBA_PORT *port, uint32_t startl, uint32_t starth, uint32_t count,
             break;
         if (port->is & HBA_PxIS_TFES)    // Task file error
         {
-            printk("Read disk error.\r\n");
+            trace_ahci("Read disk error.");
             return 0;
         }
     }
 
     // Check again
     if (port->is & HBA_PxIS_TFES) {
-        printk("Read disk error.\r\n");
+        trace_ahci("Read disk error.");
         return 0;
     }
 
     return 1;
 }
 
-int init_ahci(HBA_MEM *abar) {
-    probe_port(abar);
-
-    uint16_t *buf = memman_alloc_4k(sys_memman, 100 * 2 * 100);
-    printk("status: %d\r\n", read_lba48(&abar->ports[0], 0, 0, 100, buf));
-
-    int i;
-    for (i = 0; i < 100; i++) {
-        printk("%04x ", buf[i]);
-    }
-    printk("\r\n");
+int init_ahci(HBA_MEM *abar, DRIVECTL *ctl) {
+    probe_port(abar, ctl);
 }

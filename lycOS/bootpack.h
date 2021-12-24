@@ -58,6 +58,12 @@ do {                                    \
     write_serial_str(temp_k);           \
 } while(0)
 
+#ifdef DEBUG
+#define dprintk(...) printk(__VA_ARGS__)
+#else
+#define dprintk(...) ((void)0)
+#endif
+
 #define ASSERT(expr)                                                                                    \
 do {                                                                                                    \
     if (!(expr)) {                                                                                      \

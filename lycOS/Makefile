@@ -1,6 +1,6 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj timer.obj serial.obj multitask.obj pci.obj ahci.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj timer.obj serial.obj multitask.obj pci.obj ahci.obj mbr.obj drive.obj
 
-VPATH := ./gui:./memory:./device:./asm:./int:./multitask:./device/pci
+VPATH := ./gui:./memory:./device:./asm:./int:./multitask:./device/pci:./filesystem
 
 # 路径
 TOOLPATH = ../tools/z_tools/
@@ -35,7 +35,7 @@ asmhead.bin : asm/asmhead.nas Makefile
 
 # 将 C 语言代码编译成 gas 汇编源码
 %.gas : %.c Makefile
-	$(CC1) -o $*.gas $<
+	$(CC1) -DDEBUG -o $*.gas $<
 
 # 从 gas 汇编转换为 nask 文件
 %.nas : %.gas Makefile
@@ -89,7 +89,7 @@ run:
  	-boot a \
  	-fda lycos.img \
  	-m 2G \
- 	-drive id=disk,file=test.img,if=none,format=raw \
+ 	-drive id=disk,file=bigtest.img,if=none,format=raw \
  	-device ahci,id=ahci \
  	-device ide-hd,drive=disk,bus=ahci.0
 
