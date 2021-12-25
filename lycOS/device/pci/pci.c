@@ -124,6 +124,7 @@ void check_all_buses(PCICTL *ctl) {
 
 PCICTL *init_pci() {
     PCICTL *ctl = (PCICTL *) memman_alloc_4k(sys_memman, sizeof(PCICTL));
+    if (ctl == NULL) return NULL;
     memset(ctl, 0, sizeof(PCICTL));
 
     check_all_buses(ctl);

@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj timer.obj serial.obj multitask.obj pci.obj ahci.obj mbr.obj drive.obj
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj ascii_font.obj graphic.obj dsctbl.obj int.obj buffer.obj mouse.obj keyboard.obj memory.obj layer.obj timer.obj serial.obj multitask.obj pci.obj ahci.obj mbr.obj drive.obj fat32.obj
 
 VPATH := ./gui:./memory:./device:./asm:./int:./multitask:./device/pci:./filesystem
 

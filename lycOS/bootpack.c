@@ -175,9 +175,10 @@ void MyOSMain() {
     }
 
     // TODO: 测试 MBR
-    uint8_t *buf = memman_alloc(sys_memman, 512);
-    read_drive(&drive_ctl->drives[0], buf, 0, 1);
-    MBR_INFO *info = init_mbr(buf);
+    MBR_INFO *info = init_mbr(&drive_ctl->drives[0]);
+
+    new_fat32_partition(&drive_ctl->drives[0], info->partitions[0].lba_start, info->partitions[0].sectors);
+
 
 
     printk("enter mainloop.\r\n");
