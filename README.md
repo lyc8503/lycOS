@@ -6,6 +6,8 @@
 
 [OS Development Wiki](http://wiki.osdev.org/)
 
+[Wikipedia](https://www.wikipedia.org)
+
 ---
 
 `lycOS`文件夹中是我自己实现的操作系统代码.(部分参考了书中的代码.)
