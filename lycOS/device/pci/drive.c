@@ -10,8 +10,17 @@
 
 DRIVECTL *init_drivectl(int max) {
     DRIVECTL *ctl = (DRIVECTL *) memman_alloc_4k(sys_memman, sizeof(DRIVECTL));
+
+    if (ctl == NULL) return NULL;
+
     memset(ctl, 0, sizeof(DRIVECTL));
     ctl->drives = (DRIVE *) memman_alloc_4k(sys_memman, sizeof(DRIVE) * max);
+
+    if (ctl->drives == NULL) {
+        memman_free_4k(sys_memman, ctl, sizeof(DRIVECTL));
+        return NULL;
+    }
+
     ctl->max = max;
     return ctl;
 }

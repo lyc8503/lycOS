@@ -1,7 +1,12 @@
 #include "memory.h"
+#include "../bootpack.h"
 #include <stdio.h>
 
 struct MEM_MANAGER* sys_memman = (struct MEM_MANAGER*) MEMMAN_ADDR;
+
+#define trace_mem(format, args...) do {                         \
+    dprintk("[MEM:%d] " format "\r\n", __LINE__, ##args);       \
+} while(0)
 
 // 初始化内存管理器
 void memman_init(struct MEM_MANAGER* man) {
@@ -41,6 +46,7 @@ unsigned int memman_alloc(struct MEM_MANAGER* man, unsigned int size) {
         }
     }
 
+    trace_mem("no more free memory!");
     return (int) NULL;  // 没有找到可用内存
 }
 
@@ -100,6 +106,7 @@ int memman_free(struct MEM_MANAGER* man, unsigned int addr, unsigned int size) {
         return 0;
     }
 
+    trace_mem("free size not enough! memory leak.");
     // 失败
     man->lost_num++;
     man->lost_size += size;

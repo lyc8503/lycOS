@@ -2,6 +2,7 @@
 #define LYCOS_H_MBR_H
 
 #include "../bootpack.h"
+#include "../device/pci/drive.h"
 
 #define MBR_FILESYSTEM_FAT32 0x0b
 #define MBR_FILESYSTEM_FAT32_LBA 0x0c
@@ -21,6 +22,6 @@ typedef struct MBR_INFO {
     MBR_PARTITION partitions[4];
 } MBR_INFO;
 
-MBR_INFO* init_mbr(uint8_t* mbr_buf);
+MBR_INFO *init_mbr(DRIVE *drv);
 
 #endif
